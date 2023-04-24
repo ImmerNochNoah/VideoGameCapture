@@ -14,22 +14,23 @@ VideoGameCapture (VGC) is an alternative to the Elgato Game Capture Software. It
 Discord: ImmerNochNoah#6323
 [Download](https://immernochnoah.itch.io/videogamecapture)
 
-
-
-
-### Installation
+## Installation 🛠
 
 - Download the latest Version of VGC from [Itch.io](https://immernochnoah.itch.io/videogamecapture)
 - Open the .rar file and click on the VideoGameCapture.exe
 - Select your Capture Card
 - Select you Capture Card Microfone Source
 - Have fun
-
     
-### Requirements
+## Requirements 📑
 
-- Capture card should support 1920p.
+- Capture card should support 1920p+.
 - Capture card support 60fps / 30fps.
+
+## Libraries and Resources Used 📚
+
+- [LeanTween](https://assetstore.unity.com/packages/tools/animation/leantween-3595)
+- [Unity-UI-Rounded-Corners](https://github.com/kirevdokimov/Unity-UI-Rounded-Corners)
 
 ## Screenshots V0.0.3
 *Main Menu without a Capture Card*
