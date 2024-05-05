@@ -5,13 +5,12 @@
 
 
 
-# VideoGameCapture (VGC) 
+# VideoGameCapture (VGC) - (This project will no longer be updated!)
 
 VideoGameCapture (VGC) is an alternative to the Elgato Game Capture Software. It is compatible with almost any capture card. It allows you to directly display the image from your capture card on the monitor with little to no delay. You can stream the Software on Discord to show it live to your friends or add it as a game capture in OBS.
 
 *This is my first project using Unity and C#. I like programming but I'm not an expert if you stuff that can be improved please let me know!*
 
-Discord: ImmerNochNoah#6323
 [Download](https://immernochnoah.itch.io/videogamecapture)
 
 ## Installation 🛠
