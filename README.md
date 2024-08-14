@@ -5,7 +5,7 @@
 
 
 
-# VideoGameCapture (VGC) - (Only bugs will be fixed. No new features will be added)
+# VideoGameCapture (VGC)
 
 VideoGameCapture (VGC) is an alternative to the Elgato Game Capture Software. It is compatible with almost any capture card. It allows you to directly display the image from your capture card on the monitor with little to no delay. You can stream the Software on Discord to show it live to your friends or add it as a game capture in OBS.
 
