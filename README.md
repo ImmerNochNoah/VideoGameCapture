@@ -31,10 +31,10 @@ VideoGameCapture (VGC) is an alternative to the Elgato Game Capture Software. It
 - [LeanTween](https://assetstore.unity.com/packages/tools/animation/leantween-3595)
 - [Unity-UI-Rounded-Corners](https://github.com/kirevdokimov/Unity-UI-Rounded-Corners)
 
-## Screenshots V0.0.3
+## Screenshots V0.0.7
 *Main Menu without a Capture Card*
-![without a Capture Card](https://i.imgur.com/7TAggtO.jpg)
+![without a Capture Card](https://i.imgur.com/7TAggtO.jpg](https://i.imgur.com/fAxbmSX.png))
 *Main Menu with a Nintendo Switch*
-![Nintendo Switch](https://i.imgur.com/igiXttg.jpg)
-*Capture Card Settings Menu (This will be updated soon...)*
-![Capture Card Settings](https://i.imgur.com/zPOLZGt.jpg)
+![Nintendo Switch](https://i.imgur.com/TzkHspw.png)
+*This is how you use the software*
+![VideoGameCapture tutorial](https://i.imgur.com/xpNwiPG.png)
