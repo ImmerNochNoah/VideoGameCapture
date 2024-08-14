@@ -43,7 +43,7 @@ namespace DentedPixel.LTExamples
             //          Time.timeScale = 0.25f;
 
             LeanTest.timeout = 46f;
-            LeanTest.expected = 62;
+            LeanTest.expected = 63;
 
             LeanTween.init(1300);
 
@@ -268,6 +268,15 @@ namespace DentedPixel.LTExamples
                 LeanTest.expect(value2UpdateCalled, "VALUE2 UPDATE");
             });
 
+            // Testing specific cancellation
+            GameObject cubeCancelA = cubeNamed("cubeCancelA");
+            cubeCancelA.LeanMoveX(10f, 1f);
+            cubeCancelA.LeanMoveY(10f, 1f);
+            LeanTween.cancel(cubeCancelA, false, TweenAction.MOVE_X);
+            LTDescr[] descrs = LeanTween.descriptions(cubeCancelA);
+            LeanTest.expect(descrs.Length == 1, "SPECIFIC TWEEN DID CANCEL");
+
+
             // check descr
             //          LTDescr descr2 = LeanTween.descr( descrId );
             //          LeanTest.expect(descr2 == null,"DESCRIPTION STARTS AS NULL");
@@ -346,7 +355,7 @@ namespace DentedPixel.LTExamples
             bool didPassBounds = true;
             Vector3 failPoint = Vector3.zero;
             LeanTween.move(cubeBounds, new Vector3(10, 10, 10), 0.1f).setOnUpdate((float val) => {
-                //              Debug.LogWarning("cubeBounds x:"+cubeBounds.transform.position.x + " y:"+ cubeBounds.transform.position.y+" z:"+cubeBounds.transform.position.z);
+                //Debug.LogWarning("cubeBounds x:"+cubeBounds.transform.position.x + " y:"+ cubeBounds.transform.position.y+" z:"+cubeBounds.transform.position.z);
                 if (cubeBounds.transform.position.x < 0f || cubeBounds.transform.position.x > 10f || cubeBounds.transform.position.y < 0f || cubeBounds.transform.position.y > 10f || cubeBounds.transform.position.z < 0f || cubeBounds.transform.position.z > 10f)
                 {
                     didPassBounds = false;

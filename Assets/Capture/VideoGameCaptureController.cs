@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 /* 
  * The VideoGameCaptureController class is the "Main" class here i do most of the stuff
@@ -21,11 +22,15 @@ public class VideoGameCaptureController : MonoBehaviour
     public SettingsAnimation settingsAnimation;
     public ScreenAnimation screenAnimation;
 
+    public VolumeBarManager volumeBarManager;
+
     public GameObject settingsMenu;
 
     public GameObject pauseScreen;
 
     public float soundVolume;
+
+    public TextMeshProUGUI selectedAudioText;
 
     bool userUsingApp;
 
@@ -38,6 +43,13 @@ public class VideoGameCaptureController : MonoBehaviour
         //will show the normal settings menu
         settingsAnimation.showSettings(true);
         Cursor.visible = true;
+
+        //this will automaticliy restart the audio every 30m and so will fix the bug with the fuzzy sound
+        InvokeRepeating(nameof(restartAudio), 0, 1800f);
+
+
+        StartCoroutine(stopAudioOnFirstStart());
+
     }
 
     // Update is called once per frame
@@ -60,7 +72,12 @@ public class VideoGameCaptureController : MonoBehaviour
             {
                 if (startAudio.microfoneUsed != null)
                 {
-                    startAudio.startSound(startAudio.microfoneUsed);
+                    if (selectedAudioText.text != null)
+                    {
+                        if (!selectedAudioText.text.Equals("No Audio Input")) {
+                            startAudio.startSound(startAudio.microfoneUsed);
+                        }                  
+                    }
                     screenAnimation.show(false);
                 }
                 userUsingApp = true;
@@ -84,12 +101,12 @@ public class VideoGameCaptureController : MonoBehaviour
     }
     void volumeCheck()
     {
-        if (Input.GetKeyDown(KeyCode.UpArrow))
+        if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetAxis("Mouse ScrollWheel") > 0f)
         {
             changeAudioVolume(startAudio.audioSource.volume + 0.10f);
         }
 
-        if (Input.GetKeyDown(KeyCode.DownArrow))
+        if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetAxis("Mouse ScrollWheel") < 0f)
         {
             changeAudioVolume(startAudio.audioSource.volume - 0.10f);
         }
@@ -135,6 +152,7 @@ public class VideoGameCaptureController : MonoBehaviour
     {
         startAudio.audioSource.volume = volume;
         soundVolume = startAudio.audioSource.volume;
+        volumeBarManager.updateVolumeBar();
     }
 
     public void openSettingsMenu()
@@ -142,5 +160,15 @@ public class VideoGameCaptureController : MonoBehaviour
         bool show = !settingsMenu.active;
         settingsAnimation.showSettings(show);
         Cursor.visible = show;
+    }
+
+    IEnumerator stopAudioOnFirstStart()
+    {
+        yield return new WaitForSeconds(0.050F);
+        startAudio.stopSound();
+    }
+    public void restartAudio()
+    {
+        startAudio.audioRestart();
     }
 }

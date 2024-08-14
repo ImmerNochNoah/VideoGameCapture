@@ -14,6 +14,10 @@ public class Dropdown : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+
+        //First selected item in dropdown menu
+        cards.Add("No Capture Card");
+
         for (int i = 0; i < WebCamTexture.devices.Length; i++)
         {
             cards.Add(WebCamTexture.devices[i].name);
@@ -21,7 +25,6 @@ public class Dropdown : MonoBehaviour
 
 
         captureCards.options.Clear();
-
         foreach (string t in cards)
         {
             captureCards.options.Add(new TMP_Dropdown.OptionData() { text = t });

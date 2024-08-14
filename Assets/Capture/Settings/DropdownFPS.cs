@@ -16,8 +16,12 @@ public class DropdownFPS : MonoBehaviour
     void Start()
     {
         fps.Add("60");
+        fps.Add("50");
+        fps.Add("48");
         fps.Add("30");
-
+        fps.Add("24");
+        fps.Add("20");
+        fps.Add("10");
         fpsOptions.options.Clear();
 
         foreach (string t in fps)

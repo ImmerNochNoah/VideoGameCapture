@@ -14,6 +14,9 @@ using UnityEngine.UI;
 public class StartCapture : MonoBehaviour
 {
     public WebCamTexture webCameraTexture;
+    public RawImage webCamImage;
+
+    public Texture2D noSignalImage;
 
     public int targetFPS;
 
@@ -23,6 +26,13 @@ public class StartCapture : MonoBehaviour
     public StartAudio startAudio;
     public void setCaptureCard(string name)
     {
+        //When "No Capture Card" is selected then stop and replace the texture 
+        if (name.Equals("No Capture Card"))
+        {
+            webCameraTexture.Stop();
+            webCamImage.texture = noSignalImage;
+            return;
+        }
 
         if (webCameraTexture != null && webCameraTexture.isPlaying)
         {
@@ -46,13 +56,13 @@ public class StartCapture : MonoBehaviour
             webCameraTexture.requestedFPS = targetFPS;
         }
 
-        GetComponent<RawImage>().texture = webCameraTexture;
+        webCamImage.texture = webCameraTexture;
 
         Debug.Log("Resolution: " + webCameraTexture.requestedWidth + " x " + webCameraTexture.requestedHeight);
         Debug.Log("Fps: " + webCameraTexture.requestedFPS);
 
         webCameraTexture.Play();
-        startAudio.startSound(startAudio.microfoneUsed);
+        //startAudio.startSound(startAudio.microfoneUsed);
     }
 
     public void setFps(int fps)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.EventSystems;
 
 public class DropdownAudio : MonoBehaviour
 {
@@ -14,11 +15,14 @@ public class DropdownAudio : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+
+        //First selected item in dropdown menu
+        microfone.Add("No Audio Input");
+
         for (int i = 0; i < Microphone.devices.Length; i++)
         {
             microfone.Add(Microphone.devices[i]);
         }
-
 
         captureCards.options.Clear();
 
@@ -26,7 +30,6 @@ public class DropdownAudio : MonoBehaviour
         {
             captureCards.options.Add(new TMP_Dropdown.OptionData() { text = t });
         }
-
     }
 
     public void HandleInputData(int val)
