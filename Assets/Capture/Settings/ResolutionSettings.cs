@@ -7,9 +7,10 @@ using TMPro;
 public class ResolutionSettings : MonoBehaviour
 {
     public TMP_Dropdown resolutionOptions;
+    public TMP_Text resolutionText;
 
     public StartCapture StartCapture;
-
+    public RectTransform outputTransform;
 
     public List<string> resolutions = new List<string>();
 
@@ -44,10 +45,16 @@ public class ResolutionSettings : MonoBehaviour
     {
         string resolution = resolutions[res];
         string[] split = resolution.Split(' ', 'x');
-
         int wight = int.Parse(split[0]);
         int hight = int.Parse(split[1]);
+        changeResolutionInPxl(wight, hight);
+        return;
+    }
 
+    public void changeResolutionInPxl(int wight, int hight)
+    {
         StartCapture.setResolution(wight, hight);
+        outputTransform.sizeDelta = new Vector2(wight, hight);
+        resolutionText.text = wight + "x" + hight;
     }
 }

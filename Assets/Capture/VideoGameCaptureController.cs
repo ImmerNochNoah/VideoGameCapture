@@ -57,32 +57,6 @@ public class VideoGameCaptureController : MonoBehaviour
     {
         appKeys();
         volumeCheck();
-
-        if (!Application.isFocused)
-        {
-            userUsingApp = false;
-            if (!pauseScreen.active)
-            {
-                startAudio.stopSound();
-                screenAnimation.show(true);
-            }
-        } else
-        {
-            if (!userUsingApp)
-            {
-                if (startAudio.microfoneUsed != null)
-                {
-                    if (selectedAudioText.text != null)
-                    {
-                        if (!selectedAudioText.text.Equals("No Audio Input")) {
-                            startAudio.startSound(startAudio.microfoneUsed);
-                        }                  
-                    }
-                    screenAnimation.show(false);
-                }
-                userUsingApp = true;
-            }
-        }
     }
 
     void appKeys()
@@ -101,12 +75,12 @@ public class VideoGameCaptureController : MonoBehaviour
     }
     void volumeCheck()
     {
-        if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetAxis("Mouse ScrollWheel") > 0f)
+        if (Input.GetKeyDown(KeyCode.UpArrow))
         {
             changeAudioVolume(startAudio.audioSource.volume + 0.10f);
         }
 
-        if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetAxis("Mouse ScrollWheel") < 0f)
+        if (Input.GetKeyDown(KeyCode.DownArrow))
         {
             changeAudioVolume(startAudio.audioSource.volume - 0.10f);
         }
