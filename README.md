@@ -5,9 +5,13 @@
 
 
 
-# VideoGameCapture (VGC)
+# VideoGameCapture (VGC) - The Flexible Alternative
 
-VideoGameCapture (VGC) is an alternative to the Elgato Game Capture Software. It is compatible with almost any capture card. It allows you to directly display the image from your capture card on the monitor with little to no delay. You can stream the Software on Discord to show it live to your friends or add it as a game capture in OBS.
+VideoGameCapture (VGC) is a powerful alternative to the Elgato Game Capture Software, designed to work seamlessly with almost any capture card.
+
+With VGC, you can display the video feed from your capture card directly on your monitor with minimal to no delay, ensuring a smooth and responsive gaming experience. Play your favorite games directly from your capture card!
+
+Want to share your gameplay? Stream the VGC software on Discord to showcase your skills live to friends, or integrate it as a game capture source in OBS to enhance your streams effortlessly.
 
 *This is my first project using Unity and C#. I like programming but I'm not an expert if you see stuff that can be improved please let me know!*
 
@@ -31,10 +35,10 @@ VideoGameCapture (VGC) is an alternative to the Elgato Game Capture Software. It
 - [LeanTween](https://assetstore.unity.com/packages/tools/animation/leantween-3595)
 - [Unity-UI-Rounded-Corners](https://github.com/kirevdokimov/Unity-UI-Rounded-Corners)
 
-## Screenshots V0.0.7
+## Screenshots V0.0.8
 *Main Menu without a Capture Card*
-![without a Capture Card](https://i.imgur.com/7TAggtO.jpg](https://i.imgur.com/fAxbmSX.png))
+![without a Capture Card](https://img.itch.zone/aW1hZ2UvMjAxNzczNi8xOTI1NDQzMS5wbmc=/original/OTzYpJ.png)
 *Main Menu with a Nintendo Switch*
-![Nintendo Switch](https://i.imgur.com/TzkHspw.png)
+![Nintendo Switch](https://img.itch.zone/aW1hZ2UvMjAxNzczNi8xOTI1NDQyMy5wbmc=/original/OY1T%2BT.png)
 *This is how you use the software*
 ![VideoGameCapture tutorial](https://i.imgur.com/xpNwiPG.png)
