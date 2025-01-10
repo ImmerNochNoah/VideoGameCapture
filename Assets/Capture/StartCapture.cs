@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -24,6 +25,16 @@ public class StartCapture : MonoBehaviour
     public int requestedWidth;
 
     public StartAudio startAudio;
+    public AspectRatioDropdown aspectRatioDropdown;
+
+
+    public TMP_Text captureCardDropdownLabel;
+    public TMP_Text resolutionDropdownLabel;
+    public TMP_Text fpsDropdownLabel;
+
+    //aspectratio text is gettings changed in AspectRatioDropdown class. Sorry for that horrible spaghetti code. i hate it my self! 
+    //public TMP_Text aspectRatioDropdownLabel;
+
     public void setCaptureCard(string name)
     {
         //When "No Capture Card" is selected then stop and replace the texture 
@@ -63,11 +74,17 @@ public class StartCapture : MonoBehaviour
 
         webCameraTexture.Play();
         //startAudio.startSound(startAudio.microfoneUsed);
+
+
+        ////This is there so the dropdown label updates when software starts and a capturecard was in settings.json
+        captureCardDropdownLabel.text = webCameraTexture.deviceName;
+        resolutionDropdownLabel.text = webCameraTexture.requestedWidth + " x " + webCameraTexture.requestedHeight;
+        fpsDropdownLabel.text = "" + targetFPS;
     }
 
     public void setFps(int fps)
     {
-        requestedHeight = fps;
+        targetFPS = fps;
         reloadCaptureCardSettings();
     }
     public void setResolution(int widht, int hight)

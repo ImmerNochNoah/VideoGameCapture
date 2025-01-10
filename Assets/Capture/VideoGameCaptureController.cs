@@ -48,7 +48,7 @@ public class VideoGameCaptureController : MonoBehaviour
         InvokeRepeating(nameof(restartAudio), 0, 1800f);
 
 
-        StartCoroutine(stopAudioOnFirstStart());
+        //StartCoroutine(stopAudioOnFirstStart());
 
     }
 

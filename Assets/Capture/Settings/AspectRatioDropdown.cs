@@ -11,6 +11,8 @@ public class AspectRatioDropdown : MonoBehaviour
 
     public RectTransform outputTransform;
     public ResolutionSettings resolutionSettings;
+    public string selectedAspectRatio = "16:9";
+    public TMP_Text aspectRatioDropdownLabel;
 
     public List<string> aspectRatioList = new List<string>();
     // Start is called before the first frame update
@@ -33,25 +35,42 @@ public class AspectRatioDropdown : MonoBehaviour
     //I know this might not be the smartest or best way of changing the aspect ratio. I can't do math, so I don't want to waste more time on this. It works, so I don't care.
     public void HandleInputData(int val)
     {
-        string aspectRatio = aspectRatioList[val];
+        changeAspectRatio(aspectRatioList[val]);
+    }
+
+    public void changeAspectRatio(string aspectRatio)
+    {
         Debug.Log(aspectRatio);
+
         if (aspectRatio.Equals("16:9"))
         {
             resolutionSettings.changeResolutionInPxl(Screen.mainWindowDisplayInfo.width, Screen.mainWindowDisplayInfo.height);
-        } else if (aspectRatio.Equals("4:9 - 4K"))
+            selectedAspectRatio = "16:9";
+            aspectRatioDropdownLabel.text = selectedAspectRatio;
+        }
+        else if (aspectRatio.Equals("4:9 - 4K"))
         {
             resolutionSettings.changeResolutionInPxl(3840, 2880);
-        } else if (aspectRatio.Equals("4:9 - 2K"))
+            selectedAspectRatio = "4:9 - 4K";
+            aspectRatioDropdownLabel.text = selectedAspectRatio;
+        }
+        else if (aspectRatio.Equals("4:9 - 2K"))
         {
             resolutionSettings.changeResolutionInPxl(2560, 1920);
+            selectedAspectRatio = "4:9 - 2K";
+            aspectRatioDropdownLabel.text = selectedAspectRatio;
         }
         else if (aspectRatio.Equals("4:9 - FullHD"))
         {
             resolutionSettings.changeResolutionInPxl(1440, 1080);
+            selectedAspectRatio = "4:9 - FullHD";
+            aspectRatioDropdownLabel.text = selectedAspectRatio;
         }
         else if (aspectRatio.Equals("4:9 - HD"))
         {
             resolutionSettings.changeResolutionInPxl(960, 720);
+            selectedAspectRatio = "4:9 - HD";
+            aspectRatioDropdownLabel.text = selectedAspectRatio;
         }
     }
 }

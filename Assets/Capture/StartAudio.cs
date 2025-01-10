@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class StartAudio : MonoBehaviour
@@ -8,6 +9,7 @@ public class StartAudio : MonoBehaviour
     public VideoGameCaptureController videoGameCaptureController;
     public string microfoneUsed;
 
+    public TMP_Text dropdownLabel;
 
     public void startSound(string name)
     {
@@ -35,6 +37,10 @@ public class StartAudio : MonoBehaviour
 
             while (!(Microphone.GetPosition(name) > 0)) { }
             audioSource.PlayDelayed(0.1f);
+
+
+            //This is there so the dropdown label updates when software starts and a audio input was in settings.json
+            dropdownLabel.text = name;
         }
     }
 
