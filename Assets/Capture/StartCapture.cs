@@ -16,6 +16,7 @@ public class StartCapture : MonoBehaviour
 {
     public WebCamTexture webCameraTexture;
     public RawImage webCamImage;
+    public CanvasScaler userCanvas;
 
     public Texture2D noSignalImage;
 
@@ -26,11 +27,14 @@ public class StartCapture : MonoBehaviour
 
     public StartAudio startAudio;
     public AspectRatioDropdown aspectRatioDropdown;
+    public VideoGameCaptureController videoGameCaptureController;
 
 
     public TMP_Text captureCardDropdownLabel;
     public TMP_Text resolutionDropdownLabel;
     public TMP_Text fpsDropdownLabel;
+
+    public AspectRatioFitter aspectRatioFitter;
 
     //aspectratio text is gettings changed in AspectRatioDropdown class. Sorry for that horrible spaghetti code. i hate it my self! 
     //public TMP_Text aspectRatioDropdownLabel;
@@ -59,6 +63,8 @@ public class StartCapture : MonoBehaviour
         {
             webCameraTexture = new WebCamTexture(1920, 1080);
         }
+
+
         webCameraTexture.deviceName = name;
 
         //Sets custom fps
@@ -99,5 +105,17 @@ public class StartCapture : MonoBehaviour
         {
             setCaptureCard(webCameraTexture.deviceName);
         }
+    }
+
+    public void SetAspect43()
+    {
+        aspectRatioFitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+        aspectRatioFitter.aspectRatio = 4f / 3f;
+    }
+
+    public void SetNativeAspectFromWebcam(WebCamTexture cam)
+    {
+        aspectRatioFitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+        aspectRatioFitter.aspectRatio = (float)cam.width / cam.height;
     }
 }

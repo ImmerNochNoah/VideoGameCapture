@@ -19,10 +19,7 @@ public class AspectRatioDropdown : MonoBehaviour
     void Start()
     {
         aspectRatioList.Add("16:9");
-        aspectRatioList.Add("4:9 - FullHD");
-        aspectRatioList.Add("4:9 - 2K");
-        aspectRatioList.Add("4:9 - 4K");
-        aspectRatioList.Add("4:9 - HD");
+        aspectRatioList.Add("4:9");
 
         aspectRatioOptions.options.Clear();
 
@@ -44,33 +41,17 @@ public class AspectRatioDropdown : MonoBehaviour
 
         if (aspectRatio.Equals("16:9"))
         {
-            resolutionSettings.changeResolutionInPxl(Screen.mainWindowDisplayInfo.width, Screen.mainWindowDisplayInfo.height);
+            resolutionSettings.StartCapture.SetNativeAspectFromWebcam(resolutionSettings.StartCapture.webCameraTexture);
             selectedAspectRatio = "16:9";
             aspectRatioDropdownLabel.text = selectedAspectRatio;
+            Debug.Log("Changed to 16:9");
         }
-        else if (aspectRatio.Equals("4:9 - 4K"))
+        else
         {
-            resolutionSettings.changeResolutionInPxl(3840, 2880);
-            selectedAspectRatio = "4:9 - 4K";
+            resolutionSettings.StartCapture.SetAspect43();
+            selectedAspectRatio = "4:9";
             aspectRatioDropdownLabel.text = selectedAspectRatio;
-        }
-        else if (aspectRatio.Equals("4:9 - 2K"))
-        {
-            resolutionSettings.changeResolutionInPxl(2560, 1920);
-            selectedAspectRatio = "4:9 - 2K";
-            aspectRatioDropdownLabel.text = selectedAspectRatio;
-        }
-        else if (aspectRatio.Equals("4:9 - FullHD"))
-        {
-            resolutionSettings.changeResolutionInPxl(1440, 1080);
-            selectedAspectRatio = "4:9 - FullHD";
-            aspectRatioDropdownLabel.text = selectedAspectRatio;
-        }
-        else if (aspectRatio.Equals("4:9 - HD"))
-        {
-            resolutionSettings.changeResolutionInPxl(960, 720);
-            selectedAspectRatio = "4:9 - HD";
-            aspectRatioDropdownLabel.text = selectedAspectRatio;
+            Debug.Log("Changed to 4:9");
         }
     }
 }
