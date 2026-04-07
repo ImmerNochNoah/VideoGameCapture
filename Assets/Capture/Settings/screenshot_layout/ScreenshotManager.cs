@@ -27,7 +27,7 @@ public class ScreenshotManager : MonoBehaviour
 
     public void takeScreenshot()
     {
-        string screenshotname = "vgc - " + DateTime.Now.ToString("MM-dd-HH-mm-ss-yyyy") + ".png";
+        string screenshotname = "vgc-" + DateTime.Now.ToString("MM-dd-HH-mm-ss-yyyy") + ".png";
         string newScreenshotPath = Path.Combine(screenshotFolderPath, screenshotname);
         Debug.Log("Saved new screenshot: " + newScreenshotPath);
 

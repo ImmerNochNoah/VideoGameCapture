@@ -21,6 +21,10 @@ public class vgcSettings
     public float audioDelay = 0.1f;
     public bool restartAudio = true;
     public float autoRestartAudioEverySeconds = 1800f;
+
+
+    public bool settingsOpen = true;
+    public bool checkForUpdates = true;
 }
 public class SaveSystem : MonoBehaviour
 {
@@ -100,6 +104,7 @@ public class SaveSystem : MonoBehaviour
         //only save when user has a capture card selected
         if (vgcc.startCapture.webCameraTexture != null)
         {
+
             loadedSettings.captureCardName = vgcc.startCapture.webCameraTexture.deviceName;
             loadedSettings.fps = vgcc.startCapture.webCameraTexture.requestedFPS;
             loadedSettings.resolutionWight = vgcc.startCapture.webCameraTexture.requestedWidth;
@@ -110,6 +115,7 @@ public class SaveSystem : MonoBehaviour
             loadedSettings.audioVolume = vgcc.soundVolume;
             
             loadedSettings.audioDelay = vgcc.startAudio.audioDelayFormCaptureCard;
+            loadedSettings.settingsOpen = vgcc.getSettingsMenuOpen();
 
             string json = JsonUtility.ToJson(loadedSettings);
             Debug.Log(json);
@@ -127,5 +133,14 @@ public class SaveSystem : MonoBehaviour
     public vgcSettings getSetting()
     {
         return loadedSettings;
+    }
+
+    public void setSetting(vgcSettings settings)
+    {
+        loadedSettings = settings;
+    }
+    public bool settingsExist()
+    {
+        return File.Exists(Path.Combine(vgcc.applicationPath, "Settings.json"));
     }
 }

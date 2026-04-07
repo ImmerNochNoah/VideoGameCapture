@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: ac09a6bb2fcfca24cb544df3900e4964
+guid: 6ae50ea290bbf8e498fdbcaf83efbafa
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6560210757060520570
-    second: screenshot_icon_0
+      213: 4687526028014895136
+    second: button_BG3_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: screenshot_icon_0
+      name: button_BG3_0
       rect:
         serializedVersion: 2
-        x: 22
-        y: 35
-        width: 210
-        height: 184
+        x: 0
+        y: 0
+        width: 512
+        height: 512
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a7ae9421dec8a0b50800000000000000
-      internalID: 6560210757060520570
+      spriteID: 020c93f36107d0140800000000000000
+      internalID: 4687526028014895136
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      screenshot_icon_0: 6560210757060520570
+      button_BG3_0: 4687526028014895136
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

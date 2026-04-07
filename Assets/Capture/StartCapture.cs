@@ -1,4 +1,5 @@
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,6 +20,7 @@ public class StartCapture : MonoBehaviour
     public CanvasScaler userCanvas;
 
     public Texture2D noSignalImage;
+    public GameObject noCaptureCardConnected; 
 
     public int targetFPS;
 
@@ -45,9 +47,11 @@ public class StartCapture : MonoBehaviour
         if (name.Equals("No Capture Card"))
         {
             webCameraTexture.Stop();
-            webCamImage.texture = noSignalImage;
+            noCaptureCardConnected.SetActive(true);
             return;
         }
+        noCaptureCardConnected.SetActive(false);
+
 
         if (webCameraTexture != null && webCameraTexture.isPlaying)
         {

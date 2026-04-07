@@ -21,7 +21,7 @@ public class VolumeBar : MonoBehaviour
 
     public void UpdateVolumeBar()
     {
-        volumeBar.value = captureController.soundVolume;
+        volumeBar.value = captureController.startAudio.audioSource.volume;
         audioSource.PlayOneShot(soundChangedAudioClip, volumeBar.value);
         inactive = false;
     }

@@ -13,6 +13,8 @@ using UnityEngine;
 public class VideoGameCaptureController : MonoBehaviour
 {
 
+    public GitHubUpdateChecker updateChecker;
+
     public AudioSource audioSource;
 
     public WebCamDevice[] devices;
@@ -21,7 +23,7 @@ public class VideoGameCaptureController : MonoBehaviour
     public StartCapture startCapture;
     public StartAudio startAudio;
 
-    public SettingsAnimation settingsAnimation;
+    public ScreenAnimation settingsAnimation;
     public ScreenAnimation screenAnimation;
 
     public VolumeBarManager volumeBarManager;
@@ -45,21 +47,17 @@ public class VideoGameCaptureController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
         devices = WebCamTexture.devices;
         Application.targetFrameRate = 60;
-        
-        //will show the normal settings menu
-        settingsAnimation.showSettings(true);
-        Cursor.visible = true;
-
         //we need this to store data like screenshots and settings.
         applicationPath = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
-        Debug.Log("Application Path: " + applicationPath);
+        Debug.Log($"Application Path: {applicationPath}");
 
 
         screenshotManager.checkIfScreenshotFolderExists();
-        StartCoroutine(autoRestartAudio());
+        StartCoroutine(userDefaults());
+        StartCoroutine(updateChecker.CheckForUpdates());
+
         //StartCoroutine(stopAudioOnFirstStart());
 
     }
@@ -68,8 +66,6 @@ public class VideoGameCaptureController : MonoBehaviour
     void Update()
     {
         appKeys();
-        volumeCheck();
-        takeScreenshotFromGameScene();
     }
 
     void appKeys()
@@ -85,6 +81,14 @@ public class VideoGameCaptureController : MonoBehaviour
         {
             changeWindowMode();
         }
+
+        //take screenshot
+        if (Input.GetKeyDown(KeyCode.F9))
+        {
+            screenshotManager.takeScreenshot();
+        }
+
+        volumeCheck();
     }
     void volumeCheck()
     {
@@ -123,15 +127,18 @@ public class VideoGameCaptureController : MonoBehaviour
         if (startAudio.audioSource.volume != 0f)
         {
             startAudio.audioSource.volume = 0f;
+            volumeBarManager.updateVolumeBar();
         }
         else
         {
             if (soundVolume == 0f)
             {
                 startAudio.audioSource.volume = 0.3f;
+                volumeBarManager.updateVolumeBar();
                 return;
             }
             startAudio.audioSource.volume = soundVolume;
+            volumeBarManager.updateVolumeBar();
         }
     }
 
@@ -142,25 +149,40 @@ public class VideoGameCaptureController : MonoBehaviour
         volumeBarManager.updateVolumeBar();
     }
 
+    //left settings menu
+
+    public bool getSettingsMenuOpen()
+    {
+        return settingsMenu.active;
+    }
+
     public void openSettingsMenu()
     {
-        bool show = !settingsMenu.active;
-        settingsAnimation.showSettings(show);
+        bool show = !getSettingsMenuOpen();
+        openSettingsMenu(show);
+    }
+
+    public void openSettingsMenu(bool show)
+    {
+        settingsAnimation.show(show);
         Cursor.visible = show;
     }
 
-    IEnumerator stopAudioOnFirstStart()
+    IEnumerator userDefaults()
     {
         yield return new WaitForSeconds(0.050F);
-        startAudio.stopSound();
-    }
-    public void restartAudio()
-    {
-        startAudio.audioRestart();
-    }
+        if (saveSystem.settingsExist())
+        {
+            bool openSettings = saveSystem.getSetting().settingsOpen;
+            openSettingsMenu(openSettings);
+            Debug.Log($"User configuration open settings on  start: {openSettings}");
+        }
+        else
+        {
+            Debug.Log("Opening settings: User configuration dont exists!");
+            openSettingsMenu(true);
+        }
 
-    IEnumerator autoRestartAudio()
-    {
         Debug.Log("Check if audio restart is activated... waiting 3 seconds for settings to load");
         //wait 3 seconds so there is enough time for the settings to load
         yield return new WaitForSeconds(3);
@@ -174,13 +196,9 @@ public class VideoGameCaptureController : MonoBehaviour
         }
     }
 
-
-    public void takeScreenshotFromGameScene()
+    public void restartAudio()
     {
-        if (Input.GetKeyDown(KeyCode.F9))
-        {
-            screenshotManager.takeScreenshot();
-        }
+        startAudio.audioRestart();
     }
 
     public void playSound(AudioSource audioSource, AudioClip audioClip)
