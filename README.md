@@ -42,3 +42,5 @@ Want to share your gameplay? Stream the VGC software on Discord to showcase your
 ![Nintendo Switch](https://img.itch.zone/aW1hZ2UvMjAxNzczNi8xOTI1NDQyMy5wbmc=/original/OY1T%2BT.png)
 *This is how you use the software*
 ![VideoGameCapture tutorial](https://i.imgur.com/xpNwiPG.png)
+
+Licensed under GPLv3. If you use this code, you must keep it open and give credit.
