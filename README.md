@@ -25,7 +25,9 @@ Want to share your gameplay? Stream the VGC software on Discord to showcase your
 - Select you Capture Card Microfone Source
 - Have fun
 
-Troubleshooting: If you experience any audio issues with the new engine, please check your settings.json. Try changing the "audioVolume": 0.01 value to 0.02 or slightly higher until the problem is resolved. 
+## Troubleshooting 🚧
+If you experience any audio issues with the new engine, please check your settings.json.
+Try changing the "audioVolume": 0.01 value to 0.02 or slightly higher until the problem is resolved. 
 
 Important: Do not set this value higher than 0.30!
     
