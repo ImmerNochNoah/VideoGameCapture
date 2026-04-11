@@ -34,6 +34,7 @@ Want to share your gameplay? Stream the VGC software on Discord to showcase your
 
 - [LeanTween](https://assetstore.unity.com/packages/tools/animation/leantween-3595)
 - [Unity-UI-Rounded-Corners](https://github.com/kirevdokimov/Unity-UI-Rounded-Corners)
+- [FMOD](https://www.fmod.com/)
 ## Screenshots V0.0.12
 *Main Menu without a Capture Card*
 ![without a Capture Card](https://img.itch.zone/aW1hZ2UvMjAxNzczNi8yNjU2NTYwOC5wbmc=/original/1GFeZx.png)
