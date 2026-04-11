@@ -34,11 +34,13 @@ Want to share your gameplay? Stream the VGC software on Discord to showcase your
 
 - [LeanTween](https://assetstore.unity.com/packages/tools/animation/leantween-3595)
 - [Unity-UI-Rounded-Corners](https://github.com/kirevdokimov/Unity-UI-Rounded-Corners)
-
-## Screenshots V0.0.8
+## Screenshots V0.0.12
 *Main Menu without a Capture Card*
-![without a Capture Card](https://img.itch.zone/aW1hZ2UvMjAxNzczNi8xOTI1NDQzMS5wbmc=/original/OTzYpJ.png)
+![without a Capture Card](https://img.itch.zone/aW1hZ2UvMjAxNzczNi8yNjU2NTYwOC5wbmc=/original/1GFeZx.png)
+## Screenshots V0.0.8
 *Main Menu with a Nintendo Switch*
 ![Nintendo Switch](https://img.itch.zone/aW1hZ2UvMjAxNzczNi8xOTI1NDQyMy5wbmc=/original/OY1T%2BT.png)
 *This is how you use the software*
 ![VideoGameCapture tutorial](https://i.imgur.com/xpNwiPG.png)
+
+Licensed under GPLv3. If you use this code, you must keep it open and give credit.
