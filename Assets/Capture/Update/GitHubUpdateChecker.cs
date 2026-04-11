@@ -14,7 +14,7 @@ public class GitHubUpdateChecker : MonoBehaviour
 {
     public VideoGameCaptureController videoGameCaptureController;
 
-    string currentVersion = "0.0.12";
+    string currentVersion = "0.0.13";
     public string githubUser = "ImmerNochNoah";
     public string repoName = "VideoGameCapture";
 
@@ -51,6 +51,7 @@ public class GitHubUpdateChecker : MonoBehaviour
                     else
                     {
                         Debug.Log("VGC is Uptodate!");
+                        Debug.Log($"now: {currentVersion}, New: {latestVersion}");
                     }
                 }
                 else

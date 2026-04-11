@@ -8,9 +8,6 @@ public class SoundSyncButton : MonoBehaviour
 
     public void onButtonClick()
     {
-        if (videoGameCaptureController.startAudio.microfoneUsed != null)
-        {
-            videoGameCaptureController.startAudio.startSound(videoGameCaptureController.startAudio.microfoneUsed);
-        }
+        videoGameCaptureController.audioPureFMOD.RestartAudio();
     }
 }

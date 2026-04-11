@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,24 +13,22 @@ public class VolumeBar : MonoBehaviour
 
     public Slider volumeBar;
 
-    public VideoGameCaptureController captureController;
+    public VideoGameCaptureController vgc;
 
     public ScreenAnimation screenAnimation;
 
-    public AudioSource audioSource;
-    public AudioClip soundChangedAudioClip;
-
     public void UpdateVolumeBar()
     {
-        volumeBar.value = captureController.startAudio.audioSource.volume;
-        audioSource.PlayOneShot(soundChangedAudioClip, volumeBar.value);
+        volumeBar.value = vgc.audioPureFMOD.volume;
+        //captureController.playSound(soundChangedAudioClip, volumeBar.value);
+        vgc.audioPureFMOD.PlaySoundEffektByName("UI_CLICK");
         inactive = false;
     }
 
     private void OnEnable()
     {
         inactive = false;
-        volumeBar.value = captureController.soundVolume;
+        volumeBar.value = vgc.soundVolume;
 
         StartCoroutine(CheckIfInactive());
         screenAnimation.show(true);

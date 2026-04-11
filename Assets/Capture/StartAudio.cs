@@ -53,14 +53,10 @@ public class StartAudio : MonoBehaviour
     }
     public void audioRestart()
     {
+
         if (microfoneUsed != null)
         {
-            if (Microphone.IsRecording(microfoneUsed))
-            {
-                audioSource.Stop();
-                Microphone.End(microfoneUsed);
-                startSound(microfoneUsed);
-            }
+
         }
     }
 

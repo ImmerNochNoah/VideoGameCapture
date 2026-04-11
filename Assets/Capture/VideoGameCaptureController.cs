@@ -22,6 +22,7 @@ public class VideoGameCaptureController : MonoBehaviour
 
     public StartCapture startCapture;
     public StartAudio startAudio;
+    public AudioPureFMOD audioPureFMOD;
 
     public ScreenAnimation settingsAnimation;
     public ScreenAnimation screenAnimation;
@@ -94,12 +95,12 @@ public class VideoGameCaptureController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
-            changeAudioVolume(startAudio.audioSource.volume + 0.10f);
+            changeAudioVolume(audioPureFMOD.volume + 0.10f);
         }
 
         if (Input.GetKeyDown(KeyCode.DownArrow))
         {
-            changeAudioVolume(startAudio.audioSource.volume - 0.10f);
+            changeAudioVolume(audioPureFMOD.volume - 0.10f);
         }
 
         if (Input.GetKeyDown(KeyCode.M))
@@ -124,33 +125,33 @@ public class VideoGameCaptureController : MonoBehaviour
 
     public void muteSound()
     {
-        if (startAudio.audioSource.volume != 0f)
+        if (audioPureFMOD.volume != 0f)
         {
-            startAudio.audioSource.volume = 0f;
+            audioPureFMOD.SetVolume(0f);
             volumeBarManager.updateVolumeBar();
         }
         else
         {
             if (soundVolume == 0f)
             {
-                startAudio.audioSource.volume = 0.3f;
+                audioPureFMOD.SetVolume(0.3f);
                 volumeBarManager.updateVolumeBar();
                 return;
             }
-            startAudio.audioSource.volume = soundVolume;
+            audioPureFMOD.SetVolume(soundVolume);
+            audioPureFMOD.volume = soundVolume;
             volumeBarManager.updateVolumeBar();
         }
     }
 
     public void changeAudioVolume(float volume)
     {
-        startAudio.audioSource.volume = volume;
-        soundVolume = startAudio.audioSource.volume;
+        audioPureFMOD.SetVolume(volume);
+        soundVolume = audioPureFMOD.volume;
         volumeBarManager.updateVolumeBar();
     }
 
     //left settings menu
-
     public bool getSettingsMenuOpen()
     {
         return settingsMenu.active;
@@ -198,11 +199,6 @@ public class VideoGameCaptureController : MonoBehaviour
 
     public void restartAudio()
     {
-        startAudio.audioRestart();
+        audioPureFMOD.RestartAudio();
     }
-
-    public void playSound(AudioSource audioSource, AudioClip audioClip)
-    {
-        audioSource.PlayOneShot(audioClip, startAudio.audioSource.volume);
-    } 
 }

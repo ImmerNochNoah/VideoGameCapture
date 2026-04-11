@@ -9,16 +9,15 @@ using Unity.VisualScripting;
 public class vgcSettings
 {
     public string captureCardName;
-    public string audioInput;
     public float fps;
     public string aspectRatio;
     public int resolutionHight;
     public int resolutionWight;
 
-
-    public float audioVolume;
-
-    public float audioDelay = 0.1f;
+    public string audioInput;
+    public string audioOutput;
+    public float audioVolume = 1f;
+    public float audioDelay = 0.01f;
     public bool restartAudio = true;
     public float autoRestartAudioEverySeconds = 1800f;
 
@@ -51,11 +50,11 @@ public class SaveSystem : MonoBehaviour
 
             Debug.Log("Settings:");
             Debug.Log("captureCardName: " + loadedSettings.captureCardName);
-            Debug.Log("audioInput: " + loadedSettings.audioInput);
             Debug.Log("fps: " + loadedSettings.fps);
             Debug.Log("aspectRatio: " + loadedSettings.aspectRatio);
             Debug.Log("resolutionWight: " + loadedSettings.resolutionWight);
             Debug.Log("resolutionHight: " + loadedSettings.resolutionHight);
+            Debug.Log("audioInput: " + loadedSettings.audioInput);
             Debug.Log("audioVolume: " + loadedSettings.audioVolume);
 
             if (loadedSettings.restartAudio)
@@ -87,14 +86,17 @@ public class SaveSystem : MonoBehaviour
         vgcc.startCapture.setFps((int)loadedSettings.fps);
         Debug.Log("FPS loaded");
 
-        vgcc.startAudio.audioSource.volume = loadedSettings.audioVolume;
+        vgcc.audioPureFMOD.SetVolume(loadedSettings.audioVolume);
         Debug.Log("AudioVolume loaded");
 
-        vgcc.startAudio.startSound(loadedSettings.audioInput);
-        Debug.Log("AudioInput loaded");
+        Debug.Log($"AudioInput: {vgcc.audioPureFMOD.getAudioSources().IndexOf(loadedSettings.audioInput)}");
+        vgcc.audioPureFMOD.StartCaptureEngine(vgcc.audioPureFMOD.getAudioSources().IndexOf(loadedSettings.audioInput));
 
-        vgcc.startAudio.audioDelayFormCaptureCard = loadedSettings.audioDelay;
-        Debug.Log($"Audio Delay loaded: {vgcc.startAudio.audioDelayFormCaptureCard} seconds");
+        Debug.Log($"AudioOutput loaded {vgcc.audioPureFMOD.getOutputSources().IndexOf(loadedSettings.audioOutput)}");
+        vgcc.audioPureFMOD.SetAudioOutputDevice(vgcc.audioPureFMOD.getOutputSources().IndexOf(loadedSettings.audioOutput));
+
+        vgcc.audioPureFMOD.targetLatencySeconds = loadedSettings.audioDelay;
+        Debug.Log($"Audio Delay loaded: {vgcc.audioPureFMOD.targetLatencySeconds} seconds");
 
         Debug.Log($"Restart audio loaded: {loadedSettings.restartAudio}");
     }
@@ -111,10 +113,12 @@ public class SaveSystem : MonoBehaviour
             loadedSettings.resolutionHight = vgcc.startCapture.webCameraTexture.requestedHeight;
             loadedSettings.aspectRatio = vgcc.startCapture.aspectRatioDropdown.selectedAspectRatio;
 
-            loadedSettings.audioInput = vgcc.startAudio.microfoneUsed;
-            loadedSettings.audioVolume = vgcc.soundVolume;
-            
-            loadedSettings.audioDelay = vgcc.startAudio.audioDelayFormCaptureCard;
+
+            loadedSettings.audioInput = vgcc.audioPureFMOD.lastUsedAudioSource;
+            loadedSettings.audioVolume = vgcc.audioPureFMOD.volume;          
+            loadedSettings.audioDelay = vgcc.audioPureFMOD.targetLatencySeconds;
+            loadedSettings.audioOutput = vgcc.audioPureFMOD.lastUsedAudioOutput;
+
             loadedSettings.settingsOpen = vgcc.getSettingsMenuOpen();
 
             string json = JsonUtility.ToJson(loadedSettings);

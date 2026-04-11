@@ -4,14 +4,11 @@ using UnityEngine;
 
 public class ScreenshotManager : MonoBehaviour
 {
-    public VideoGameCaptureController captureController;
-    
-    public AudioClip clip;
-    public AudioSource source;
+    public VideoGameCaptureController vgc;
     public string screenshotFolderPath;
     public void checkIfScreenshotFolderExists()
     {
-        screenshotFolderPath = Path.Combine(captureController.applicationPath, "Screenshots");
+        screenshotFolderPath = Path.Combine(vgc.applicationPath, "Screenshots");
         Debug.Log("screenshot folder: " + screenshotFolderPath);
         bool screenshotFolderExists = Directory.Exists(screenshotFolderPath);
 
@@ -32,6 +29,6 @@ public class ScreenshotManager : MonoBehaviour
         Debug.Log("Saved new screenshot: " + newScreenshotPath);
 
         ScreenCapture.CaptureScreenshot(newScreenshotPath, 1);
-        captureController.playSound(source, clip);
+        vgc.audioPureFMOD.PlaySoundEffektByName("SCREENSHOT");
     }
 }

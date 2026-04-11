@@ -8,6 +8,6 @@ public class VolDownButton : MonoBehaviour
 
     public void onButtonClick()
     {
-        videoGameCaptureController.changeAudioVolume(videoGameCaptureController.startAudio.audioSource.volume - 0.10f);
+        videoGameCaptureController.changeAudioVolume(videoGameCaptureController.audioPureFMOD.volume - 0.10f);
     }
 }
