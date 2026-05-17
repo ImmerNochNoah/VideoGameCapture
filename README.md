@@ -24,6 +24,12 @@ Want to share your gameplay? Stream the VGC software on Discord to showcase your
 - Select your Capture Card
 - Select you Capture Card Microfone Source
 - Have fun
+
+## Troubleshooting 🚧
+If you experience any audio issues with the new engine, please check your settings.json.
+Try changing the "audioDelay": 0.01 value to 0.02 or slightly higher until the problem is resolved. 
+
+Important: Do not set this value higher than 0.30!
     
 ## Requirements 📑
 
@@ -34,9 +40,10 @@ Want to share your gameplay? Stream the VGC software on Discord to showcase your
 
 - [LeanTween](https://assetstore.unity.com/packages/tools/animation/leantween-3595)
 - [Unity-UI-Rounded-Corners](https://github.com/kirevdokimov/Unity-UI-Rounded-Corners)
-## Screenshots V0.0.12
+- [FMOD](https://www.fmod.com/)
+## Screenshots V0.0.13
 *Main Menu without a Capture Card*
-![without a Capture Card](https://img.itch.zone/aW1hZ2UvMjAxNzczNi8yNjU2NTYwOC5wbmc=/original/1GFeZx.png)
+![without a Capture Card](https://img.itch.zone/aW1hZ2UvMjAxNzczNi8yNjYyOTA4OS5wbmc=/original/zpVzSB.png)
 ## Screenshots V0.0.8
 *Main Menu with a Nintendo Switch*
 ![Nintendo Switch](https://img.itch.zone/aW1hZ2UvMjAxNzczNi8xOTI1NDQyMy5wbmc=/original/OY1T%2BT.png)
