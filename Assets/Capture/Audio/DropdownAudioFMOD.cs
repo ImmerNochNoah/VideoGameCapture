@@ -8,8 +8,7 @@ using UnityEngine.EventSystems;
 public class DropdownAudioFMOD : MonoBehaviour
 {
     public TMPro.TMP_Dropdown captureCards;
-
-    public VideoGameCaptureController videoGameCaptureController;
+    public VideoGameCaptureController vgc;
     // Start is called before the first frame update
     void Start()
     {
@@ -38,8 +37,6 @@ public class DropdownAudioFMOD : MonoBehaviour
         captureCards.ClearOptions();
         captureCards.AddOptions(options);
 
-
-
     }
 
     public void HandleInputData(int val)
@@ -49,7 +46,7 @@ public class DropdownAudioFMOD : MonoBehaviour
         if (val == 0)
         {
             Debug.Log("[FMOD DROPDOWN AUDIO INPUT] Stop Audio (No Audio Input)");
-            videoGameCaptureController.audioPureFMOD.StopCapture();
+            vgc.audioPureFMOD.StopCapture();
         }
         else
         {
@@ -57,7 +54,40 @@ public class DropdownAudioFMOD : MonoBehaviour
             // we have to subtract 1 to get the actual FMOD index!
             int fmodIndex = val - 1;
             Debug.Log("[FMOD DROPDOWN AUDIO INPUT] Start FMOD recording with driver index: " + fmodIndex);
-            videoGameCaptureController.audioPureFMOD.StartCaptureEngine(fmodIndex);
+            vgc.audioPureFMOD.StartCaptureEngine(fmodIndex);
         }
+    }
+
+    public void RefreshDeviceList()
+    {
+        FMOD.System coreSystem = FMODUnity.RuntimeManager.CoreSystem;
+        int numRecordDrivers, numConnected;
+
+        // Holt die Geräte der JETZT AKTUELLEN Audio-API
+        coreSystem.getRecordNumDrivers(out numRecordDrivers, out numConnected);
+
+        List<string> options = new List<string>();
+        options.Add("No Audio Input");
+
+        for (int i = 0; i < numRecordDrivers; i++)
+        {
+            System.Guid guid;
+            string name;
+            int sampleRate;
+            FMOD.SPEAKERMODE speakerMode;
+            int channels;
+            FMOD.DRIVER_STATE state;
+
+            coreSystem.getRecordDriverInfo(i, out name, 256, out guid, out sampleRate, out speakerMode, out channels, out state);
+            options.Add(name);
+        }
+
+        captureCards.ClearOptions();
+        captureCards.AddOptions(options);
+
+        // Letztes Gerät laden
+        int savedDropdownIndex = vgc.audioPureFMOD.getAudioSources().IndexOf(vgc.saveSystem.getSetting().audioInput);
+        captureCards.value = savedDropdownIndex < captureCards.options.Count ? savedDropdownIndex : 0;
+        captureCards.RefreshShownValue();
     }
 }

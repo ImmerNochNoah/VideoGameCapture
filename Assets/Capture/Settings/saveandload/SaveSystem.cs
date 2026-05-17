@@ -14,13 +14,18 @@ public class vgcSettings
     public int resolutionHight;
     public int resolutionWight;
 
-    public string audioInput;
-    public string audioOutput;
+    public string audioInput = "";
+    public string audioOutput = "";
     public float audioVolume = 1f;
-    public float audioDelay = 0.01f;
+    public float audioDelay = 0.03f;
     public bool restartAudio = true;
     public float autoRestartAudioEverySeconds = 1800f;
+    public int savedAudioAPI = 0;
 
+    public int lastRangeMode = 0;
+    public float lastBrightness = 0f;
+    public float lastContrast = 1f;
+    public float lastSaturation = 1f;
 
     public bool settingsOpen = true;
     public bool checkForUpdates = true;
@@ -86,6 +91,14 @@ public class SaveSystem : MonoBehaviour
         vgcc.startCapture.setFps((int)loadedSettings.fps);
         Debug.Log("FPS loaded");
 
+
+        vgcc.colorController.SetRangeMode(loadedSettings.lastRangeMode);
+        vgcc.colorController.SetContrast(loadedSettings.lastContrast);
+        vgcc.colorController.SetBrightness(loadedSettings.lastBrightness);
+        vgcc.colorController.SetSaturation(loadedSettings.lastSaturation);
+
+        //savedAudioAPI
+
         vgcc.audioPureFMOD.SetVolume(loadedSettings.audioVolume);
         Debug.Log("AudioVolume loaded");
 
@@ -113,6 +126,10 @@ public class SaveSystem : MonoBehaviour
             loadedSettings.resolutionHight = vgcc.startCapture.webCameraTexture.requestedHeight;
             loadedSettings.aspectRatio = vgcc.startCapture.aspectRatioDropdown.selectedAspectRatio;
 
+            loadedSettings.lastRangeMode = vgcc.colorController.lastRangeMode;
+            loadedSettings.lastContrast = vgcc.colorController.lastContrast;
+            loadedSettings.lastBrightness = vgcc.colorController.lastBrightness;
+            loadedSettings.lastSaturation = vgcc.colorController.lastSaturation;
 
             loadedSettings.audioInput = vgcc.audioPureFMOD.lastUsedAudioSource;
             loadedSettings.audioVolume = vgcc.audioPureFMOD.volume;          

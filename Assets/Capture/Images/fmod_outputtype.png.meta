@@ -1,15 +1,21 @@
 fileFormatVersion: 2
-guid: eab1579f1ac837e49b431563dde9ceda
+guid: 277d5bd9e08494a45af572dfce423784
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5057582049110848789
-    second: headphones_256dp_FFFFFF_FILL1_wght500_GRAD0_opsz48_0
+      213: 867558535880482024
+    second: rule_settings_254dp_FFFFFF_FILL0_wght500_GRAD200_opsz20_0
+  - first:
+      213: -5660006652357258742
+    second: rule_settings_254dp_FFFFFF_FILL0_wght500_GRAD200_opsz20_1
+  - first:
+      213: 6531864943436498107
+    second: rule_settings_254dp_FFFFFF_FILL0_wght500_GRAD200_opsz20_2
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
     mipMapMode: 0
-    enableMipMap: 1
+    enableMipMap: 0
     sRGBTexture: 1
     linearTexture: 0
     fadeOut: 0
@@ -73,7 +79,7 @@ TextureImporter:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
     maxTextureSize: 256
-    resizeAlgorithm: 1
+    resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
     compressionQuality: 50
@@ -113,13 +119,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: headphones_256dp_FFFFFF_FILL1_wght500_GRAD0_opsz48_0
+      name: rule_settings_254dp_FFFFFF_FILL0_wght500_GRAD200_opsz20_0
       rect:
         serializedVersion: 2
-        x: 29
-        y: 29
-        width: 198
-        height: 198
+        x: 27
+        y: 43
+        width: 70
+        height: 166
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +134,52 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: bea0b5c2cebdfc9b0800000000000000
-      internalID: -5057582049110848789
+      spriteID: 8ec930154ef2a0c00800000000000000
+      internalID: 867558535880482024
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rule_settings_254dp_FFFFFF_FILL0_wght500_GRAD200_opsz20_1
+      rect:
+        serializedVersion: 2
+        x: 157
+        y: 136
+        width: 68
+        height: 75
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a02d5eb00fd9371b0800000000000000
+      internalID: -5660006652357258742
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rule_settings_254dp_FFFFFF_FILL0_wght500_GRAD200_opsz20_2
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 0
+        width: 117
+        height: 120
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb40c5a0f88d5aa50800000000000000
+      internalID: 6531864943436498107
       vertices: []
       indices: 
       edges: []
@@ -148,7 +198,9 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      headphones_256dp_FFFFFF_FILL1_wght500_GRAD0_opsz48_0: -5057582049110848789
+      rule_settings_254dp_FFFFFF_FILL0_wght500_GRAD200_opsz20_0: 867558535880482024
+      rule_settings_254dp_FFFFFF_FILL0_wght500_GRAD200_opsz20_1: -5660006652357258742
+      rule_settings_254dp_FFFFFF_FILL0_wght500_GRAD200_opsz20_2: 6531864943436498107
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

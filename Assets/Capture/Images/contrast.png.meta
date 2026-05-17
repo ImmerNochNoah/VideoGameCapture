@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: eab1579f1ac837e49b431563dde9ceda
+guid: 5c13306bc9750db44974294d70ee1013
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5057582049110848789
-    second: headphones_256dp_FFFFFF_FILL1_wght500_GRAD0_opsz48_0
+      213: 6547691179279603484
+    second: contrast_circle_256dp_FFFFFF_FILL1_wght400_GRAD0_opsz48 (1)_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -73,7 +73,7 @@ TextureImporter:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
     maxTextureSize: 256
-    resizeAlgorithm: 1
+    resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
     compressionQuality: 50
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: headphones_256dp_FFFFFF_FILL1_wght500_GRAD0_opsz48_0
+      name: contrast_circle_256dp_FFFFFF_FILL1_wght400_GRAD0_opsz48 (1)_0
       rect:
         serializedVersion: 2
-        x: 29
-        y: 29
-        width: 198
-        height: 198
+        x: 20
+        y: 20
+        width: 216
+        height: 216
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: bea0b5c2cebdfc9b0800000000000000
-      internalID: -5057582049110848789
+      spriteID: c175be7bf621eda50800000000000000
+      internalID: 6547691179279603484
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      headphones_256dp_FFFFFF_FILL1_wght500_GRAD0_opsz48_0: -5057582049110848789
+      contrast_circle_256dp_FFFFFF_FILL1_wght400_GRAD0_opsz48 (1)_0: 6547691179279603484
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -10,7 +10,7 @@ using Debug = UnityEngine.Debug;
 public class AudioPureFMOD : MonoBehaviour
 {
     //Range(0.01f, 0.2f - The delay in seconds before the sound plays.
-    public float targetLatencySeconds = 0.01f;
+    public float targetLatencySeconds = 0.05f;
 
     //Range0.5f, 5.0f - How much audio is kept in memory.
     public float bufferSizeSeconds = 0.5f;
@@ -69,9 +69,59 @@ public class AudioPureFMOD : MonoBehaviour
             yield return null;
         }
 
-        // play Sound
         coreSystem.playSound(_captureSound, new FMOD.ChannelGroup(), false, out _captureChannel);
+
+        uint currentRecordPos;
+        coreSystem.getRecordPosition(_recordDeviceIndex, out currentRecordPos);
+
+        uint startPlayPos = (currentRecordPos >= safeDelaySamples) ? (currentRecordPos - safeDelaySamples) : 0;
+        _captureChannel.setPosition(startPlayPos, FMOD.TIMEUNIT.PCM);
+
         _captureChannel.setVolume(volume);
+
+        StartCoroutine(MonitorDrift(sampleRate, safeDelaySamples));
+    }
+
+    private IEnumerator MonitorDrift(int sampleRate, uint idealDelay)
+    {
+        FMOD.System coreSystem = FMODUnity.RuntimeManager.CoreSystem;
+        uint bufferSamples = (uint)(sampleRate * bufferSizeSeconds);
+
+        float baseFrequency = sampleRate;
+
+        while (_recordDeviceIndex != -1 && _captureChannel.hasHandle())
+        {
+            uint recordPos, playPos;
+            coreSystem.getRecordPosition(_recordDeviceIndex, out recordPos);
+            _captureChannel.getPosition(out playPos, FMOD.TIMEUNIT.PCM);
+
+            uint distance = (recordPos >= playPos) ? (recordPos - playPos) : (bufferSamples - playPos + recordPos);
+
+            if (distance < (sampleRate * 0.005f) || distance > (sampleRate * 0.2f))
+            {
+                Debug.LogWarning("[VGC Audio] Extremer Lag! Harter Resync wird durchgeführt.");
+                uint newPlayPos = (recordPos >= idealDelay) ? (recordPos - idealDelay) : (bufferSamples - idealDelay + recordPos);
+                _captureChannel.setPosition(newPlayPos, FMOD.TIMEUNIT.PCM);
+                _captureChannel.setFrequency(baseFrequency); 
+            }
+ 
+            else
+            {
+                if (distance < idealDelay * 0.5f)
+                {
+                    _captureChannel.setFrequency(baseFrequency * 0.998f);
+                }
+                else if (distance > idealDelay * 1.5f)
+                {
+                    _captureChannel.setFrequency(baseFrequency * 1.002f);
+                }
+                else
+                {
+                    _captureChannel.setFrequency(baseFrequency);
+                }
+            }
+            yield return new WaitForSeconds(0.2f);
+        }
     }
 
     public void SetVolume(float newVolume)
@@ -111,7 +161,7 @@ public class AudioPureFMOD : MonoBehaviour
             }
 
             _recordDeviceIndex = -1;
-         
+
             Debug.Log("[FMOD] The capture stream has been completely shut down.");
         }
     }
@@ -218,5 +268,48 @@ public class AudioPureFMOD : MonoBehaviour
         myEvent.setVolume(volume);
         myEvent.start();
         myEvent.release();
+    }
+
+    public void PrintFMODDebugInfo()
+    {
+        FMOD.System coreSystem = FMODUnity.RuntimeManager.CoreSystem;
+        int numRecordDrivers, numConnected;
+        coreSystem.getRecordNumDrivers(out numRecordDrivers, out numConnected);
+
+        Debug.Log($"--- FMOD AUDIO DIAGNOSTICS ---");
+        Debug.Log($"Total devices found: {numRecordDrivers}");
+        Debug.Log($"Devices recognized as connected: {numConnected}");
+
+        for (int i = 0; i < numRecordDrivers; i++)
+        {
+            System.Guid guid;
+            string name;
+            int sampleRate;
+            FMOD.SPEAKERMODE speakerMode;
+            int channels;
+            FMOD.DRIVER_STATE state;
+
+            coreSystem.getRecordDriverInfo(i, out name, 256, out guid, out sampleRate, out speakerMode, out channels, out state);
+
+            Debug.Log($"[Index {i}] Name: {name}");
+            Debug.Log($"   Channels: {channels}, SampleRate: {sampleRate}Hz");
+
+            // Check if it's the default device
+            if ((state & FMOD.DRIVER_STATE.DEFAULT) == FMOD.DRIVER_STATE.DEFAULT)
+            {
+                Debug.Log("   -> Info: This is the current Windows default device.");
+            }
+
+            // Check if the device is physically connected and accessible
+            if ((state & FMOD.DRIVER_STATE.CONNECTED) == FMOD.DRIVER_STATE.CONNECTED)
+            {
+                Debug.Log("   -> Status: Connected and ready.");
+            }
+            else
+            {
+                Debug.Log("   -> ERROR/WARNING: Device is in the Windows Registry, but NOT connected or is blocked!");
+            }
+        }
+        Debug.Log($"------------------------------");
     }
 }

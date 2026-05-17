@@ -9,9 +9,19 @@ public class DropdownOutputSourcesFMOD : MonoBehaviour
 {
     public TMPro.TMP_Dropdown outputSources;
 
-    public VideoGameCaptureController videoGameCaptureController;
+    public VideoGameCaptureController vgc;
     // Start is called before the first frame update
     void Start()
+    {
+        RefreshDeviceList();
+    }
+
+    public void HandleInputData(int val)
+    {
+        vgc.audioPureFMOD.SetAudioOutputDevice(val);
+    }
+
+    public void RefreshDeviceList()
     {
         FMOD.System coreSystem = FMODUnity.RuntimeManager.CoreSystem;
 
@@ -42,14 +52,11 @@ public class DropdownOutputSourcesFMOD : MonoBehaviour
 
         int currentDriver;
         coreSystem.getDriver(out currentDriver);
-        outputSources.value = currentDriver;
-        outputSources.RefreshShownValue();
-
-        videoGameCaptureController.audioPureFMOD.lastUsedAudioOutput = videoGameCaptureController.audioPureFMOD.getOutputSourceById(currentDriver);
-    }
-
-    public void HandleInputData(int val)
-    {
-        videoGameCaptureController.audioPureFMOD.SetAudioOutputDevice(val);
+        if (currentDriver > 1)
+        {
+            outputSources.value = currentDriver;
+            outputSources.RefreshShownValue();
+            vgc.audioPureFMOD.lastUsedAudioOutput = vgc.audioPureFMOD.getOutputSourceById(currentDriver);
+        }
     }
 }

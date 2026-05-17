@@ -14,7 +14,7 @@ public class GitHubUpdateChecker : MonoBehaviour
 {
     public VideoGameCaptureController videoGameCaptureController;
 
-    string currentVersion = "0.0.13";
+    string currentVersion = "0.0.14";
     public string githubUser = "ImmerNochNoah";
     public string repoName = "VideoGameCapture";
 
@@ -32,7 +32,6 @@ public class GitHubUpdateChecker : MonoBehaviour
 
             using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
             {
-                // GitHub verlangt oft einen User-Agent Header
                 webRequest.SetRequestHeader("User-Agent", "Unity-Update-Checker");
 
                 yield return webRequest.SendWebRequest();
@@ -77,7 +76,6 @@ public class GitHubUpdateChecker : MonoBehaviour
     }
     bool IsNewer(string latest, string current)
     {
-        // Einfacher Vergleich von Versions-Strings
         Version vLatest = new Version(latest);
         Version vCurrent = new Version(current);
         return vLatest > vCurrent;

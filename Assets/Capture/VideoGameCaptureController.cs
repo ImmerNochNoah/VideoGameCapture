@@ -23,6 +23,7 @@ public class VideoGameCaptureController : MonoBehaviour
     public StartCapture startCapture;
     public StartAudio startAudio;
     public AudioPureFMOD audioPureFMOD;
+    public CcColorController colorController;
 
     public ScreenAnimation settingsAnimation;
     public ScreenAnimation screenAnimation;

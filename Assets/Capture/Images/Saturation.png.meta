@@ -1,10 +1,13 @@
 fileFormatVersion: 2
-guid: eab1579f1ac837e49b431563dde9ceda
+guid: 382e8aea867aa47479d573e4139bd3a6
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5057582049110848789
-    second: headphones_256dp_FFFFFF_FILL1_wght500_GRAD0_opsz48_0
+      213: -6559839763120295069
+    second: colors_256dp_FFFFFF_FILL1_wght400_GRAD0_opsz48_0
+  - first:
+      213: 1487371064425309168
+    second: colors_256dp_FFFFFF_FILL1_wght400_GRAD0_opsz48_1
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -73,7 +76,7 @@ TextureImporter:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
     maxTextureSize: 256
-    resizeAlgorithm: 1
+    resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
     compressionQuality: 50
@@ -113,13 +116,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: headphones_256dp_FFFFFF_FILL1_wght500_GRAD0_opsz48_0
+      name: colors_256dp_FFFFFF_FILL1_wght400_GRAD0_opsz48_0
       rect:
         serializedVersion: 2
-        x: 29
-        y: 29
-        width: 198
-        height: 198
+        x: 20
+        y: 31
+        width: 168
+        height: 205
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +131,30 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: bea0b5c2cebdfc9b0800000000000000
-      internalID: -5057582049110848789
+      spriteID: 3637bbfad74c6f4a0800000000000000
+      internalID: -6559839763120295069
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: colors_256dp_FFFFFF_FILL1_wght400_GRAD0_opsz48_1
+      rect:
+        serializedVersion: 2
+        x: 191
+        y: 31
+        width: 45
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0f3e3484a1434a410800000000000000
+      internalID: 1487371064425309168
       vertices: []
       indices: 
       edges: []
@@ -148,7 +173,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      headphones_256dp_FFFFFF_FILL1_wght500_GRAD0_opsz48_0: -5057582049110848789
+      colors_256dp_FFFFFF_FILL1_wght400_GRAD0_opsz48_0: -6559839763120295069
+      colors_256dp_FFFFFF_FILL1_wght400_GRAD0_opsz48_1: 1487371064425309168
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
