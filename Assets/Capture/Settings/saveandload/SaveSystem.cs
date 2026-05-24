@@ -17,7 +17,8 @@ public class vgcSettings
     public string audioInput = "";
     public string audioOutput = "";
     public float audioVolume = 1f;
-    public float audioDelay = 0.03f;
+    public float audioLatency = 0.08f;
+    public float audioBufferSize = 0.5f;
     public bool restartAudio = true;
     public float autoRestartAudioEverySeconds = 1800f;
     public int savedAudioAPI = 0;
@@ -99,6 +100,12 @@ public class SaveSystem : MonoBehaviour
 
         //savedAudioAPI
 
+        vgcc.audioPureFMOD.targetLatencySeconds = loadedSettings.audioLatency;
+        Debug.Log($"Audio Delay loaded: {vgcc.audioPureFMOD.targetLatencySeconds} seconds");
+        vgcc.audioPureFMOD.bufferSizeSeconds = loadedSettings.audioBufferSize;
+        Debug.Log($"Audio Buffer Size: {vgcc.audioPureFMOD.bufferSizeSeconds} seconds");
+
+
         vgcc.audioPureFMOD.SetVolume(loadedSettings.audioVolume);
         Debug.Log("AudioVolume loaded");
 
@@ -107,9 +114,6 @@ public class SaveSystem : MonoBehaviour
 
         Debug.Log($"AudioOutput loaded {vgcc.audioPureFMOD.getOutputSources().IndexOf(loadedSettings.audioOutput)}");
         vgcc.audioPureFMOD.SetAudioOutputDevice(vgcc.audioPureFMOD.getOutputSources().IndexOf(loadedSettings.audioOutput));
-
-        vgcc.audioPureFMOD.targetLatencySeconds = loadedSettings.audioDelay;
-        Debug.Log($"Audio Delay loaded: {vgcc.audioPureFMOD.targetLatencySeconds} seconds");
 
         Debug.Log($"Restart audio loaded: {loadedSettings.restartAudio}");
     }
@@ -131,9 +135,10 @@ public class SaveSystem : MonoBehaviour
             loadedSettings.lastBrightness = vgcc.colorController.lastBrightness;
             loadedSettings.lastSaturation = vgcc.colorController.lastSaturation;
 
+            loadedSettings.audioLatency = vgcc.audioPureFMOD.targetLatencySeconds;
+            loadedSettings.audioBufferSize = vgcc.audioPureFMOD.bufferSizeSeconds;
             loadedSettings.audioInput = vgcc.audioPureFMOD.lastUsedAudioSource;
             loadedSettings.audioVolume = vgcc.audioPureFMOD.volume;          
-            loadedSettings.audioDelay = vgcc.audioPureFMOD.targetLatencySeconds;
             loadedSettings.audioOutput = vgcc.audioPureFMOD.lastUsedAudioOutput;
 
             loadedSettings.settingsOpen = vgcc.getSettingsMenuOpen();

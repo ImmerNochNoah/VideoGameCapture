@@ -1,30 +1,30 @@
 fileFormatVersion: 2
-guid: b54b3aaf019b8804eac412c28b913308
+guid: d3bf06deb907c0945bae0e29d8aedfff
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8943143368572360537
-    second: Sample-Rate_0
+      213: -5012120749007501799
+    second: edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_0
   - first:
-      213: -470325417800130499
-    second: Sample-Rate_1
+      213: 7655277650734851478
+    second: edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_1
   - first:
-      213: -2634672367489309448
-    second: Sample-Rate_2
+      213: -2268685271800484660
+    second: edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_2
   - first:
-      213: 8376372127821991034
-    second: Sample-Rate_3
+      213: 7951159797775685445
+    second: edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_3
   - first:
-      213: 8544478643361550032
-    second: Sample-Rate_4
+      213: -3356852189215595364
+    second: edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_4
   - first:
-      213: 3378058789701967661
-    second: Sample-Rate_5
+      213: -6709907212707097186
+    second: edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_5
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
     mipMapMode: 0
-    enableMipMap: 0
+    enableMipMap: 1
     sRGBTexture: 1
     linearTexture: 0
     fadeOut: 0
@@ -88,7 +88,7 @@ TextureImporter:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
     maxTextureSize: 256
-    resizeAlgorithm: 1
+    resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
     compressionQuality: 50
@@ -128,35 +128,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Sample-Rate_0
+      name: edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_0
       rect:
         serializedVersion: 2
         x: 27
-        y: 166
-        width: 23
-        height: 33
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 7a8aad43d7293e380800000000000000
-      internalID: -8943143368572360537
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Sample-Rate_1
-      rect:
-        serializedVersion: 2
-        x: 71
-        y: 138
+        y: 168
         width: 24
-        height: 89
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -165,20 +143,42 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: d30af2f36811979f0800000000000000
-      internalID: -470325417800130499
+      spriteID: 9160b00fbbe517ab0800000000000000
+      internalID: -5012120749007501799
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Sample-Rate_2
+      name: edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_1
       rect:
         serializedVersion: 2
-        x: 115
-        y: 116
+        x: 72
+        y: 139
+        width: 23
+        height: 90
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 695a905c6720d3a60800000000000000
+      internalID: 7655277650734851478
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_2
+      rect:
+        serializedVersion: 2
+        x: 116
+        y: 117
         width: 24
-        height: 133
+        height: 134
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -187,20 +187,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 8f4234cd073cf6bd0800000000000000
-      internalID: -2634672367489309448
+      spriteID: ccceb2be3c20480e0800000000000000
+      internalID: -2268685271800484660
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Sample-Rate_3
+      name: edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_3
       rect:
         serializedVersion: 2
-        x: 160
-        y: 138
-        width: 23
-        height: 89
+        x: 161
+        y: 139
+        width: 24
+        height: 90
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -209,20 +209,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a7c0051021ade3470800000000000000
-      internalID: 8376372127821991034
+      spriteID: 54759c285b1385e60800000000000000
+      internalID: 7951159797775685445
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Sample-Rate_4
+      name: edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_4
       rect:
         serializedVersion: 2
-        x: 204
-        y: 166
-        width: 23
-        height: 33
+        x: 205
+        y: 168
+        width: 24
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -231,20 +231,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0de0a783e06149670800000000000000
-      internalID: 8544478643361550032
+      spriteID: c94ef4228b01a61d0800000000000000
+      internalID: -3356852189215595364
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Sample-Rate_5
+      name: edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_5
       rect:
         serializedVersion: 2
-        x: 16
-        y: 16
-        width: 222
-        height: 89
+        x: 21
+        y: 20
+        width: 215
+        height: 82
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -253,8 +253,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: d2f529e429641ee20800000000000000
-      internalID: 3378058789701967661
+      spriteID: e9513cec0fe91e2a0800000000000000
+      internalID: -6709907212707097186
       vertices: []
       indices: 
       edges: []
@@ -273,12 +273,12 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Sample-Rate_0: -8943143368572360537
-      Sample-Rate_1: -470325417800130499
-      Sample-Rate_2: -2634672367489309448
-      Sample-Rate_3: 8376372127821991034
-      Sample-Rate_4: 8544478643361550032
-      Sample-Rate_5: 3378058789701967661
+      edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_0: -5012120749007501799
+      edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_1: 7655277650734851478
+      edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_2: -2268685271800484660
+      edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_3: 7951159797775685445
+      edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_4: -3356852189215595364
+      edit_audio_256dp_FFFFFF_FILL1_wght600_GRAD0_opsz48_5: -6709907212707097186
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

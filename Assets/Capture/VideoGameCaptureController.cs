@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using TMPro;
 using UnityEngine;
@@ -201,5 +202,24 @@ public class VideoGameCaptureController : MonoBehaviour
     public void restartAudio()
     {
         audioPureFMOD.RestartAudio();
+    }
+
+    public float ValidateAndClamp(string input, float min, float max, float defaultValue)
+    {
+        if (string.IsNullOrEmpty(input)) return defaultValue;
+
+        string sanitizedInput = input.Replace(',', '.');
+
+        Debug.Log($"Input Original: {input} | Sanitized: {sanitizedInput}");
+
+        if (float.TryParse(sanitizedInput, NumberStyles.Any, CultureInfo.InvariantCulture, out float result))
+        {
+            float clamped = Mathf.Clamp(result, min, max);
+            Debug.Log($"Parsing successfully: {result} -> Clamped: {clamped}");
+            return clamped;
+        }
+
+        Debug.LogWarning($"Parsing faild for: {sanitizedInput}. Use Default: {defaultValue}");
+        return defaultValue;
     }
 }

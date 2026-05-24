@@ -1,10 +1,11 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class CustomSettingsManager : MonoBehaviour
 {
     public ScreenAnimation sa;
     public GameObject settingsObject;
-
+    public List<GameObject> otherSettingsViews = new List<GameObject>();
     void Start()
     {
         
@@ -32,6 +33,16 @@ public class CustomSettingsManager : MonoBehaviour
 
     public void OnButtonSettingsMenuWithAnimation()
     {
+        if (otherSettingsViews.Count > 0) { 
+         foreach (GameObject settings in otherSettingsViews)
+            {
+                if (settings.active)
+                {
+                    ScreenAnimation saSettings = settings.GetComponent<ScreenAnimation>();
+                    saSettings.show(false);
+                }
+            }
+        }
         sa.show(!settingsObject.active);
     }
 

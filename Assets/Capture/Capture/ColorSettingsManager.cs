@@ -61,21 +61,21 @@ public class ColorSettingsManager : MonoBehaviour
 
     public void OnBrightnessInputEndEdit(string rawInput)
     {
-        float validatedValue = ValidateAndClamp(rawInput, -1f, 1.0f, 0.0f);
+        float validatedValue = cccController.vgc.ValidateAndClamp(rawInput, -1f, 1.0f, 0.0f);
         brightnessInput.text = validatedValue.ToString("F1", CultureInfo.InvariantCulture);
         SetBrightness(validatedValue);
     }
 
     public void OnSaturationInputEndEdit(string rawInput)
     {
-        float validatedValue = ValidateAndClamp(rawInput, 0f, 2.0f, 1.0f);
+        float validatedValue = cccController.vgc.ValidateAndClamp(rawInput, 0f, 2.0f, 1.0f);
         saturationInput.text = validatedValue.ToString("F2", CultureInfo.InvariantCulture);
         SetSaturation(validatedValue);
     }
 
     public void OnContrastInputEndEdit(string rawInput)
     {
-        float validatedValue = ValidateAndClamp(rawInput, 0f, 2.0f, 1.0f);
+        float validatedValue = cccController.vgc.ValidateAndClamp(rawInput, 0f, 2.0f, 1.0f);
         contrastInput.text = validatedValue.ToString("F2", CultureInfo.InvariantCulture);
         SetContrast(validatedValue);
     }
@@ -93,24 +93,5 @@ public class ColorSettingsManager : MonoBehaviour
     public void SetDefaultContrast()
     {
         SetContrast(1f);
-    }
-
-    private float ValidateAndClamp(string input, float min, float max, float defaultValue)
-    {
-        if (string.IsNullOrEmpty(input)) return defaultValue;
-
-        string sanitizedInput = input.Replace(',', '.');
-
-        Debug.Log($"Input Original: {input} | Sanitized: {sanitizedInput}");
-
-        if (float.TryParse(sanitizedInput, NumberStyles.Any, CultureInfo.InvariantCulture, out float result))
-        {
-            float clamped = Mathf.Clamp(result, min, max);
-            Debug.Log($"Parsing successfully: {result} -> Clamped: {clamped}");
-            return clamped;
-        }
-
-        Debug.LogWarning($"Parsing faild for: {sanitizedInput}. Use Default: {defaultValue}");
-        return defaultValue;
     }
 }

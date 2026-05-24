@@ -14,7 +14,7 @@ public class GitHubUpdateChecker : MonoBehaviour
 {
     public VideoGameCaptureController videoGameCaptureController;
 
-    string currentVersion = "0.0.14";
+    string currentVersion = "0.0.15";
     public string githubUser = "ImmerNochNoah";
     public string repoName = "VideoGameCapture";
 

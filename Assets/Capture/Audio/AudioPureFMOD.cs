@@ -10,10 +10,11 @@ using Debug = UnityEngine.Debug;
 public class AudioPureFMOD : MonoBehaviour
 {
     //Range(0.01f, 0.2f - The delay in seconds before the sound plays.
-    public float targetLatencySeconds = 0.05f;
+    public float targetLatencySeconds = 0.08f;
 
     //Range0.5f, 5.0f - How much audio is kept in memory.
-    public float bufferSizeSeconds = 0.5f;
+    public float bufferSizeSeconds = 1f;
+
     //Range0f, 1f
     public float volume = 1.0f;
 
@@ -120,7 +121,7 @@ public class AudioPureFMOD : MonoBehaviour
                     _captureChannel.setFrequency(baseFrequency);
                 }
             }
-            yield return new WaitForSeconds(0.2f);
+            yield return new WaitForSeconds(0.1f);
         }
     }
 
@@ -311,5 +312,15 @@ public class AudioPureFMOD : MonoBehaviour
             }
         }
         Debug.Log($"------------------------------");
+    }
+
+    public float getDefaultBufferSize()
+    {
+        return 1f;
+    }
+
+    public float getDefaultLatency()
+    {
+        return 0.08f;
     }
 }
