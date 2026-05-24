@@ -1,5 +1,5 @@
 
-![Logo](https://i.imgur.com/rT3taJk.png)
+![Logo](https://img.itch.zone/aW1nLzI3MzM3MTE4LnBuZw==/original/eYw0cd.png)
 
 
 
@@ -41,9 +41,9 @@ Important: Do not set this value higher than 0.30!
 - [LeanTween](https://assetstore.unity.com/packages/tools/animation/leantween-3595)
 - [Unity-UI-Rounded-Corners](https://github.com/kirevdokimov/Unity-UI-Rounded-Corners)
 - [FMOD](https://www.fmod.com/)
-## Screenshots V0.0.13
+## Screenshots V0.0.14
 *Main Menu without a Capture Card*
-![without a Capture Card](https://img.itch.zone/aW1hZ2UvMjAxNzczNi8yNjYyOTA4OS5wbmc=/original/zpVzSB.png)
+![without a Capture Card](https://img.itch.zone/aW1hZ2UvMjAxNzczNi8yNzMwNzU2OC5wbmc=/original/JDrpDU.png)
 ## Screenshots V0.0.8
 *Main Menu with a Nintendo Switch*
 ![Nintendo Switch](https://img.itch.zone/aW1hZ2UvMjAxNzczNi8xOTI1NDQyMy5wbmc=/original/OY1T%2BT.png)
