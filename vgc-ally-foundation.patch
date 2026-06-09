@@ -1,0 +1,1474 @@
+From dbbe378611a891b1fb60c3ec91a05051a56401a2 Mon Sep 17 00:00:00 2001
+From: Vet-TV <vettv@channel82.tv>
+Date: Tue, 9 Jun 2026 05:38:58 +0000
+Subject: [PATCH] feat: VGC-Ally SteamOS/ROG Ally port foundation
+
+Adds the complete SteamOS + ASUS ROG Ally Z1 Extreme optimization
+layer on top of upstream VGC v0.0.14.
+
+Native plugin:
+- native/v4l2/vgc_v4l2.c: V4L2 MMAP capture backend (C, GPLv3)
+- native/v4l2/CMakeLists.txt: builds libvgc_v4l2.so
+- Assets/Plugins/Linux/x86_64/libvgc_v4l2.so: prebuilt for x86_64
+  All 6 symbols exported (T): enumerate/open/grab/width/height/close
+  deps: libc only, 17K stripped
+
+Unity overlay scripts (no upstream files modified):
+- Assets/Scripts/Platform/LinuxV4L2CaptureProvider.cs
+    P/Invoke wrapper; pumps YUYV->RGBA frames into Texture2D per Update
+- Assets/Scripts/Input/AllyInputBridge.cs
+    Gamepad->VGC method bridge (Menu=settings, R-stick=volume, etc)
+    Calls existing VideoGameCaptureController methods directly
+- Assets/Scripts/Settings/AllySettingsPatch.cs
+    Redirects Settings.json to XDG path (~/.config/vgc-ally/)
+    on Linux; migrates existing settings on first run
+
+Infrastructure:
+- build/linux/launch_vgc_ally.sh: gamemoderun wrapper + preflight checks
+- build/flatpak/com.vettv.VGCAlly.json: Flatpak manifest
+- .github/workflows/build-linux.yml: CI (native plugin -> Unity IL2CPP)
+- docs/BUILDING.md: full dev setup guide
+- ALLY_README.md: user-facing install/usage docs
+
+Upstream: ImmerNochNoah/VideoGameCapture (GPLv3)
+Fork: Vet-TV/VideoGameCapture-Ally
+---
+ .github/workflows/build-linux.yml             | 129 +++++++++
+ .gitignore                                    |  15 ++
+ ALLY_README.md                                | 131 +++++++++
+ Assets/Plugins/Linux/x86_64/libvgc_v4l2.so    | Bin 0 -> 16504 bytes
+ Assets/Scripts/Input/AllyInputBridge.cs       | 129 +++++++++
+ .../Platform/LinuxV4L2CaptureProvider.cs      | 208 +++++++++++++++
+ Assets/Scripts/Settings/AllySettingsPatch.cs  |  84 ++++++
+ build/flatpak/com.vettv.VGCAlly.json          |  52 ++++
+ build/linux/launch_vgc_ally.sh                |  66 +++++
+ docs/BUILDING.md                              | 146 ++++++++++
+ native/v4l2/CMakeLists.txt                    |  32 +++
+ native/v4l2/vgc_v4l2.c                        | 250 ++++++++++++++++++
+ 12 files changed, 1242 insertions(+)
+ create mode 100644 .github/workflows/build-linux.yml
+ create mode 100644 .gitignore
+ create mode 100644 ALLY_README.md
+ create mode 100755 Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
+ create mode 100644 Assets/Scripts/Input/AllyInputBridge.cs
+ create mode 100644 Assets/Scripts/Platform/LinuxV4L2CaptureProvider.cs
+ create mode 100644 Assets/Scripts/Settings/AllySettingsPatch.cs
+ create mode 100644 build/flatpak/com.vettv.VGCAlly.json
+ create mode 100755 build/linux/launch_vgc_ally.sh
+ create mode 100644 docs/BUILDING.md
+ create mode 100644 native/v4l2/CMakeLists.txt
+ create mode 100644 native/v4l2/vgc_v4l2.c
+
+diff --git a/.github/workflows/build-linux.yml b/.github/workflows/build-linux.yml
+new file mode 100644
+index 0000000..4d6a0e2
+--- /dev/null
++++ b/.github/workflows/build-linux.yml
+@@ -0,0 +1,129 @@
++name: Build VGC-Ally Linux
++
++on:
++  push:
++    branches: [main, ally-dev]
++    tags:     ['v*']
++  pull_request:
++    branches: [main]
++
++env:
++  UNITY_VERSION: 2022.3.50f1   # Match upstream Unity version
++  BUILD_NAME:    VGCAlly
++  BUILD_PATH:    build/linux/output
++
++jobs:
++  # ── Step 1: Build native V4L2 plugin ────────────────────────────────────────
++  build-native-plugin:
++    name: Build libvgc_v4l2.so
++    runs-on: ubuntu-22.04
++
++    steps:
++      - uses: actions/checkout@v4
++
++      - name: Install build deps
++        run: |
++          sudo apt-get update
++          sudo apt-get install -y cmake gcc
++
++      - name: Configure & Build
++        working-directory: native/v4l2
++        run: |
++          cmake -B build -DCMAKE_BUILD_TYPE=Release
++          cmake --build build --target vgc_v4l2
++
++      - name: Upload .so artifact
++        uses: actions/upload-artifact@v4
++        with:
++          name: libvgc_v4l2
++          path: native/v4l2/build/libvgc_v4l2.so
++
++  # ── Step 2: Unity Linux IL2CPP build ────────────────────────────────────────
++  build-unity:
++    name: Unity Linux Build
++    runs-on: ubuntu-22.04
++    needs: build-native-plugin
++
++    steps:
++      - uses: actions/checkout@v4
++        with:
++          lfs: true
++
++      - name: Download native plugin
++        uses: actions/download-artifact@v4
++        with:
++          name: libvgc_v4l2
++          path: Assets/Plugins/Linux/x86_64/
++
++      - name: Cache Unity Library
++        uses: actions/cache@v4
++        with:
++          path: Library
++          key: Library-Linux-${{ hashFiles('Assets/**', 'ProjectSettings/**') }}
++          restore-keys: Library-Linux-
++
++      - name: Build Linux IL2CPP
++        uses: game-ci/unity-builder@v4
++        env:
++          UNITY_LICENSE:    ${{ secrets.UNITY_LICENSE }}
++          UNITY_EMAIL:      ${{ secrets.UNITY_EMAIL }}
++          UNITY_PASSWORD:   ${{ secrets.UNITY_PASSWORD }}
++        with:
++          unity-version:        ${{ env.UNITY_VERSION }}
++          target-platform:      StandaloneLinux64
++          build-name:           ${{ env.BUILD_NAME }}
++          build-path:           ${{ env.BUILD_PATH }}
++          scripting-backend:    IL2CPP
++          # Vulkan primary, OpenGL fallback
++          build-method:         BuildScript.BuildLinux
++
++      - name: Make launch script executable
++        run: chmod +x build/linux/launch_vgc_ally.sh
++
++      - name: Bundle release tarball
++        run: |
++          cp build/linux/launch_vgc_ally.sh ${{ env.BUILD_PATH }}/
++          cd ${{ env.BUILD_PATH }}
++          tar -czf ../VGCAlly-linux-x64.tar.gz .
++
++      - name: Upload build artifact
++        uses: actions/upload-artifact@v4
++        with:
++          name: VGCAlly-Linux
++          path: build/linux/VGCAlly-linux-x64.tar.gz
++
++  # ── Step 3: Release (on tag push) ───────────────────────────────────────────
++  release:
++    name: Create GitHub Release
++    runs-on: ubuntu-22.04
++    needs: build-unity
++    if: startsWith(github.ref, 'refs/tags/v')
++
++    steps:
++      - uses: actions/checkout@v4
++
++      - name: Download build
++        uses: actions/download-artifact@v4
++        with:
++          name: VGCAlly-Linux
++          path: dist/
++
++      - name: Create Release
++        uses: softprops/action-gh-release@v2
++        with:
++          files: dist/VGCAlly-linux-x64.tar.gz
++          body: |
++            ## VGC-Ally ${{ github.ref_name }}
++
++            **ASUS ROG Ally / SteamOS optimized build**
++
++            Fork of [ImmerNochNoah/VideoGameCapture](https://github.com/ImmerNochNoah/VideoGameCapture) (GPLv3)
++
++            ### Install
++            ```bash
++            tar -xzf VGCAlly-linux-x64.tar.gz
++            ./launch_vgc_ally.sh
++            ```
++            See [ALLY_README.md](https://github.com/Vet-TV/VideoGameCapture-Ally/blob/main/ALLY_README.md) for full setup instructions.
++        env:
++          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..2be5113
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,15 @@
++# CMake build artifacts
++native/v4l2/build/
++
++# Unity
++[Ll]ibrary/
++[Tt]emp/
++[Oo]bj/
++[Bb]uild/
++[Bb]uilds/
++[Ll]ogs/
++[Uu]ser[Ss]ettings/
++
++# OS
++.DS_Store
++Thumbs.db
+diff --git a/ALLY_README.md b/ALLY_README.md
+new file mode 100644
+index 0000000..1fb6f80
+--- /dev/null
++++ b/ALLY_README.md
+@@ -0,0 +1,131 @@
++# VGC-Ally 🎮
++### VideoGameCapture — ASUS ROG Ally / SteamOS Edition
++
++**Fork of:** [ImmerNochNoah/VideoGameCapture](https://github.com/ImmerNochNoah/VideoGameCapture) (GPLv3)  
++**Maintained by:** [Vet-TV](https://github.com/Vet-TV)  
++**License:** GPLv3 (attribution to upstream required per license terms)
++
++---
++
++## What Is This?
++
++VGC-Ally takes the excellent VideoGameCapture (VGC) project and optimizes it specifically for:
++
++- **ASUS ROG Ally Z1 Extreme** handheld hardware
++- **SteamOS 3.x** (Arch-based, Valve's official OS for the Ally as of 2025)
++- **Gamepad-first UI** — no keyboard or mouse required
++- **USB capture cards** via V4L2 (Video4Linux2) — plug in your Elgato, AVerMedia, etc.
++- **Low-latency preview** tuned for the Ally's 1080p 120Hz display
++- **Steam GameMode compatible** for full performance unlocking
++
++---
++
++## Hardware Target
++
++| Component | Spec |
++|---|---|
++| Device | ASUS ROG Ally Z1 Extreme |
++| CPU/APU | AMD Ryzen Z1 Extreme (8c/16t, RDNA 3 iGPU) |
++| Display | 7" 1080p 120Hz touchscreen |
++| USB | USB-C (USB 3.2 Gen 2 + DisplayPort Alt) |
++| OS | SteamOS 3.x (KDE Plasma desktop mode) |
++| Capture API | V4L2 via USB capture card |
++| Audio | PipeWire (SteamOS default) |
++
++**Tested capture cards:** Elgato HD60 X, AVerMedia Live Gamer Portable 2 Plus  
++*(Any V4L2-compatible USB capture card should work — open an issue if yours doesn't)*
++
++---
++
++## What's Changed vs Upstream
++
++| Area | Upstream VGC | VGC-Ally |
++|---|---|---|
++| Platform | Windows only (.exe) | Linux / SteamOS native |
++| Capture API | DirectShow (Windows) | V4L2 (`/dev/video*`) |
++| Audio backend | FMOD Windows | FMOD Linux → PipeWire |
++| Input | Mouse + keyboard | Gamepad (Steam Input) + touch |
++| UI layout | Desktop (1920×1080+) | Handheld-optimized (1080p compact) |
++| Settings path | App directory | XDG: `~/.config/vgc-ally/` |
++| Launch | .exe | Steam shortcut + `gamemoderun` wrapper |
++| Color range | ✅ (v0.0.14 feature) | ✅ Retained + shader-optimized for RDNA3 |
++| Video adjustments | Brightness/Contrast/Sat sliders | ✅ Retained + AMD FidelityFX hint added |
++| Audio volume bug | 0.01–0.30 workaround | Fixed: proper normalized [0.0–1.0] range |
++
++---
++
++## Installation
++
++### Prerequisites
++- SteamOS 3.x (desktop mode) or any Arch-based Linux distro
++- USB capture card (V4L2-compatible)
++- `v4l-utils` installed: `sudo pacman -S v4l-utils` (or via Discover on SteamOS)
++
++### Quick Install (Flatpak — recommended)
++```bash
++flatpak install flathub com.vettv.VGCAlly
++```
++*(Flatpak submission in progress — use manual install below until published)*
++
++### Manual Install
++```bash
++# Download the latest release
++wget https://github.com/Vet-TV/VideoGameCapture-Ally/releases/latest/download/VGCAlly-linux-x64.tar.gz
++
++# Extract
++tar -xzf VGCAlly-linux-x64.tar.gz
++cd VGCAlly-linux-x64
++
++# Run (with GameMode for best performance)
++./launch_vgc_ally.sh
++```
++
++### Add to Steam (Gaming Mode)
++1. Steam → Library → Add a Game → Add a Non-Steam Game
++2. Browse to `launch_vgc_ally.sh`
++3. Set launch options: *(none needed, script handles gamemoderun)*
++4. Add artwork from the `steam-assets/` folder
++
++---
++
++## Capture Card Setup
++
++```bash
++# Verify your capture card is detected
++v4l2-ctl --list-devices
++
++# Check supported formats
++v4l2-ctl --device /dev/video0 --list-formats-ext
++
++# Test raw preview (optional sanity check)
++mpv --no-config av://v4l2:/dev/video0 --profile=low-latency
++```
++
++---
++
++## Building from Source
++
++See [docs/BUILDING.md](docs/BUILDING.md) for full Unity IL2CPP Linux build instructions.
++
++**TL;DR:**
++```bash
++git clone https://github.com/Vet-TV/VideoGameCapture-Ally.git
++cd VideoGameCapture-Ally
++git remote add upstream https://github.com/ImmerNochNoah/VideoGameCapture.git
++git fetch upstream
++# Open in Unity 2022.3 LTS or later
++# Build Target: Linux x86_64, IL2CPP scripting backend, Vulkan graphics API
++```
++
++---
++
++## Credits
++
++- **[ImmerNochNoah/VideoGameCapture](https://github.com/ImmerNochNoah/VideoGameCapture)** — Original VGC project (GPLv3)
++- **[Vet-TV / Channel82 LABS](https://github.com/Vet-TV)** — Ally/SteamOS fork
++
++---
++
++## License
++
++GPLv3. All source modifications are open. If you use this code, keep it open and credit upstream VGC.
+diff --git a/Assets/Plugins/Linux/x86_64/libvgc_v4l2.so b/Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
+new file mode 100755
+index 0000000000000000000000000000000000000000..4d5fcbf8d11b67704e94959b7331b79703277455
+GIT binary patch
+literal 16504
+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
+Bc3}Vj
+
+literal 0
+HcmV?d00001
+
+diff --git a/Assets/Scripts/Input/AllyInputBridge.cs b/Assets/Scripts/Input/AllyInputBridge.cs
+new file mode 100644
+index 0000000..bd17125
+--- /dev/null
++++ b/Assets/Scripts/Input/AllyInputBridge.cs
+@@ -0,0 +1,129 @@
++// AllyInputBridge.cs
++// VGC-Ally — Bridges gamepad input to existing VGC keyboard shortcuts
++//
++// Upstream VGC uses keyboard shortcuts:
++//   Escape → open settings menu
++//   F5     → toggle fullscreen
++//   F9     → screenshot
++//   Up/Down arrows → volume
++//   M      → mute
++//
++// This bridge maps ROG Ally gamepad buttons to those same actions
++// by calling the existing VideoGameCaptureController methods directly.
++// No upstream code changes needed.
++//
++// Button mapping:
++//   Menu (Start)    → Settings (was: Escape)
++//   View (Select)   → Screenshot (was: F9)
++//   L3 + R3         → Toggle fullscreen (was: F5)
++//   R-Stick Up/Down → Volume +/- (was: Arrow keys)
++//   R3 (click)      → Mute (was: M)
++//
++// Attach to the same GameObject as VideoGameCaptureController.
++//
++// License: GPLv3 — fork of ImmerNochNoah/VideoGameCapture
++
++using UnityEngine;
++using UnityEngine.InputSystem;
++
++[RequireComponent(typeof(VideoGameCaptureController))]
++public class AllyInputBridge : MonoBehaviour
++{
++    [SerializeField] private VideoGameCaptureController vgcc;
++
++    [Header("Volume Adjustment")]
++    [SerializeField] private float volumeStep   = 0.10f;
++    [SerializeField] private float volumeRepeatDelay    = 0.5f;
++    [SerializeField] private float volumeRepeatInterval = 0.15f;
++
++    // Input actions
++    private InputAction _settings;
++    private InputAction _screenshot;
++    private InputAction _fullscreen;
++    private InputAction _volumeAxis;
++    private InputAction _mute;
++
++    private float _volRepeatTimer;
++    private bool  _volHeld;
++
++    private void Awake()
++    {
++        if (vgcc == null)
++            vgcc = GetComponent<VideoGameCaptureController>();
++
++        var map = new InputActionMap("AllyBridge");
++
++        _settings   = map.AddAction("Settings",    binding: "<Gamepad>/start");
++        _screenshot = map.AddAction("Screenshot",  binding: "<Gamepad>/select");
++        _mute       = map.AddAction("Mute",        binding: "<Gamepad>/rightStickPress");
++        _fullscreen = map.AddAction("Fullscreen",  InputActionType.Button);
++        // L3 + R3 simultaneous — bind both sticks, check both in callback
++        _fullscreen.AddBinding("<Gamepad>/leftStickPress");
++
++        _volumeAxis = map.AddAction("VolumeAxis", InputActionType.Value);
++        _volumeAxis.AddBinding("<Gamepad>/rightStick/y");
++
++        map.Enable();
++
++        _settings.performed   += _ => vgcc.openSettingsMenu();
++        _screenshot.performed += _ => vgcc.screenshotManager.takeScreenshot();
++        _mute.performed       += _ => vgcc.muteSound();
++
++        // Fullscreen: require both stick presses to avoid accidents
++        _fullscreen.performed += ctx =>
++        {
++            var gp = Gamepad.current;
++            if (gp != null &&
++                gp.leftStickButton.isPressed &&
++                gp.rightStickButton.isPressed)
++            {
++                vgcc.changeWindowMode();
++            }
++        };
++    }
++
++    private void Update()
++    {
++        HandleVolumeRepeat();
++    }
++
++    private void HandleVolumeRepeat()
++    {
++        float axis = _volumeAxis.ReadValue<float>();
++        if (Mathf.Abs(axis) < 0.5f)
++        {
++            _volHeld = false;
++            _volRepeatTimer = 0f;
++            return;
++        }
++
++        if (!_volHeld)
++        {
++            _volHeld = true;
++            _volRepeatTimer = Time.unscaledTime + volumeRepeatDelay;
++            ApplyVolume(axis);
++            return;
++        }
++
++        if (Time.unscaledTime >= _volRepeatTimer)
++        {
++            _volRepeatTimer = Time.unscaledTime + volumeRepeatInterval;
++            ApplyVolume(axis);
++        }
++    }
++
++    private void ApplyVolume(float axis)
++    {
++        float delta = axis > 0 ? volumeStep : -volumeStep;
++        vgcc.changeAudioVolume(vgcc.audioPureFMOD.volume + delta);
++    }
++
++    private void OnDestroy()
++    {
++        _settings?.Disable();
++        _screenshot?.Disable();
++        _fullscreen?.Disable();
++        _volumeAxis?.Disable();
++        _mute?.Disable();
++    }
++}
+diff --git a/Assets/Scripts/Platform/LinuxV4L2CaptureProvider.cs b/Assets/Scripts/Platform/LinuxV4L2CaptureProvider.cs
+new file mode 100644
+index 0000000..acc37ce
+--- /dev/null
++++ b/Assets/Scripts/Platform/LinuxV4L2CaptureProvider.cs
+@@ -0,0 +1,208 @@
++// LinuxV4L2CaptureProvider.cs
++// VGC-Ally — Linux/SteamOS capture backend
++//
++// P/Invokes into libvgc_v4l2.so (native/v4l2/vgc_v4l2.c)
++// Replaces the Windows DirectShow capture path from upstream VGC.
++//
++// License: GPLv3 — fork of ImmerNochNoah/VideoGameCapture
++
++using System;
++using System.Collections.Generic;
++using System.Runtime.InteropServices;
++using UnityEngine;
++
++namespace VGCAlly.Platform
++{
++    /// <summary>
++    /// Device descriptor returned by V4L2 enumeration.
++    /// </summary>
++    [Serializable]
++    public class V4L2DeviceInfo
++    {
++        public string Path;   // e.g. /dev/video0
++        public string Name;   // e.g. "Elgato HD60 X"
++    }
++
++    /// <summary>
++    /// Linux V4L2 capture backend.
++    /// Enumerates /dev/video* devices, opens one, and pumps RGBA frames
++    /// into a Unity Texture2D each Update().
++    ///
++    /// Usage:
++    ///   var provider = new LinuxV4L2CaptureProvider();
++    ///   var devices  = provider.EnumerateDevices();
++    ///   provider.Open(devices[0].Path, 1920, 1080, 60);
++    ///   // In Update(): provider.GrabFrame(targetTexture);
++    ///   provider.Close();
++    /// </summary>
++    public class LinuxV4L2CaptureProvider : IDisposable
++    {
++        // ── Native interop ──────────────────────────────────────────────────
++
++        private const string LibName = "vgc_v4l2";
++
++        // Must match VGCDeviceInfo layout in vgc_v4l2.c exactly
++        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
++        private struct NativeDeviceInfo
++        {
++            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
++            public string Path;
++            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
++            public string Name;
++        }
++
++        [DllImport(LibName, EntryPoint = "vgc_enumerate_devices")]
++        private static extern int Native_EnumerateDevices(
++            [Out] NativeDeviceInfo[] devices, int max);
++
++        [DllImport(LibName, EntryPoint = "vgc_open_device")]
++        private static extern IntPtr Native_OpenDevice(
++            string path, int width, int height, int fps);
++
++        [DllImport(LibName, EntryPoint = "vgc_grab_frame")]
++        private static extern int Native_GrabFrame(IntPtr dev, IntPtr rgbaOut);
++
++        [DllImport(LibName, EntryPoint = "vgc_get_width")]
++        private static extern int Native_GetWidth(IntPtr dev);
++
++        [DllImport(LibName, EntryPoint = "vgc_get_height")]
++        private static extern int Native_GetHeight(IntPtr dev);
++
++        [DllImport(LibName, EntryPoint = "vgc_close_device")]
++        private static extern void Native_CloseDevice(IntPtr dev);
++
++        // ── Internal state ──────────────────────────────────────────────────
++
++        private IntPtr  _device     = IntPtr.Zero;
++        private byte[]  _frameBuffer;
++        private GCHandle _frameHandle;
++        private int     _width;
++        private int     _height;
++        private bool    _disposed;
++
++        // ── Public API ──────────────────────────────────────────────────────
++
++        /// <summary>Enumerate all V4L2 capture devices on the system.</summary>
++        public List<V4L2DeviceInfo> EnumerateDevices()
++        {
++            var native = new NativeDeviceInfo[16];
++            int count  = Native_EnumerateDevices(native, native.Length);
++
++            var result = new List<V4L2DeviceInfo>(count);
++            for (int i = 0; i < count; i++)
++                result.Add(new V4L2DeviceInfo
++                {
++                    Path = native[i].Path,
++                    Name = native[i].Name
++                });
++
++            Debug.Log($"[VGC-Ally] Found {count} V4L2 capture device(s).");
++            return result;
++        }
++
++        /// <summary>
++        /// Open a capture device. Negotiates the closest available resolution/fps.
++        /// Call EnumerateDevices() first to get a valid path.
++        /// </summary>
++        public bool Open(string devicePath, int requestedWidth = 1920,
++                         int requestedHeight = 1080, int requestedFps = 60)
++        {
++            if (_device != IntPtr.Zero)
++            {
++                Debug.LogWarning("[VGC-Ally] Device already open. Close first.");
++                return false;
++            }
++
++            _device = Native_OpenDevice(devicePath, requestedWidth, requestedHeight, requestedFps);
++
++            if (_device == IntPtr.Zero)
++            {
++                Debug.LogError($"[VGC-Ally] Failed to open {devicePath}. " +
++                               "Check permissions (user in 'video' group?) and that the card is plugged in.");
++                return false;
++            }
++
++            _width  = Native_GetWidth(_device);
++            _height = Native_GetHeight(_device);
++
++            Debug.Log($"[VGC-Ally] Opened {devicePath} @ {_width}x{_height} {requestedFps}fps");
++
++            // Allocate frame buffer: RGBA8888
++            _frameBuffer = new byte[_width * _height * 4];
++            _frameHandle = GCHandle.Alloc(_frameBuffer, GCHandleType.Pinned);
++
++            return true;
++        }
++
++        /// <summary>
++        /// Grab the latest frame and upload it to the provided Texture2D.
++        /// Texture must be RGBA32 format and match the negotiated resolution
++        /// (use NegotiatedWidth / NegotiatedHeight).
++        /// Call every Update() or LateUpdate().
++        /// </summary>
++        /// <returns>True if a new frame was available and uploaded.</returns>
++        public bool GrabFrame(Texture2D target)
++        {
++            if (_device == IntPtr.Zero || target == null) return false;
++
++            int result = Native_GrabFrame(_device, _frameHandle.AddrOfPinnedObject());
++
++            if (result == 1)
++            {
++                // Upload raw RGBA bytes to GPU texture
++                target.LoadRawTextureData(_frameBuffer);
++                target.Apply(false);  // false = don't recalculate mipmaps (perf)
++                return true;
++            }
++
++            if (result < 0)
++                Debug.LogError("[VGC-Ally] Frame grab error — device disconnected?");
++
++            return false;
++        }
++
++        /// <summary>Create a Texture2D sized to the negotiated capture resolution.</summary>
++        public Texture2D CreateCaptureTexture()
++        {
++            if (_device == IntPtr.Zero)
++                throw new InvalidOperationException("Open a device first.");
++
++            return new Texture2D(_width, _height, TextureFormat.RGBA32, false)
++            {
++                filterMode = FilterMode.Bilinear,
++                wrapMode   = TextureWrapMode.Clamp,
++                name       = "VGCAlly_CaptureTexture"
++            };
++        }
++
++        public int  NegotiatedWidth  => _width;
++        public int  NegotiatedHeight => _height;
++        public bool IsOpen           => _device != IntPtr.Zero;
++
++        /// <summary>Stop capture, release V4L2 resources.</summary>
++        public void Close()
++        {
++            if (_device == IntPtr.Zero) return;
++
++            Native_CloseDevice(_device);
++            _device = IntPtr.Zero;
++
++            if (_frameHandle.IsAllocated)
++                _frameHandle.Free();
++
++            _frameBuffer = null;
++            _width = _height = 0;
++
++            Debug.Log("[VGC-Ally] Capture device closed.");
++        }
++
++        public void Dispose()
++        {
++            if (!_disposed)
++            {
++                Close();
++                _disposed = true;
++            }
++        }
++    }
++}
+diff --git a/Assets/Scripts/Settings/AllySettingsPatch.cs b/Assets/Scripts/Settings/AllySettingsPatch.cs
+new file mode 100644
+index 0000000..4bf8b33
+--- /dev/null
++++ b/Assets/Scripts/Settings/AllySettingsPatch.cs
+@@ -0,0 +1,84 @@
++// AllySettingsPatch.cs
++// VGC-Ally — Patches SaveSystem to use XDG config path on SteamOS/Linux
++//
++// On upstream VGC, SaveSystem writes Settings.json next to the .exe
++// (applicationPath). On SteamOS this fails silently because:
++//   - The Flatpak sandbox may deny writes to the app directory
++//   - SteamOS immutable rootfs puts apps in read-only locations
++//
++// This patch component sits alongside VideoGameCaptureController and
++// overrides the filePath before SaveSystem.Start() reads it.
++//
++// Attach to the same GameObject as VideoGameCaptureController.
++//
++// License: GPLv3 — fork of ImmerNochNoah/VideoGameCapture
++
++using System;
++using System.IO;
++using UnityEngine;
++
++public class AllySettingsPatch : MonoBehaviour
++{
++    [Tooltip("Reference to the SaveSystem component on this GameObject")]
++    public SaveSystem saveSystem;
++
++    [Tooltip("Reference to VideoGameCaptureController for applicationPath override")]
++    public VideoGameCaptureController vgcc;
++
++    private void Awake()
++    {
++        // Override applicationPath before SaveSystem.Start() fires
++        // SaveSystem uses: Path.Combine(vgcc.applicationPath, "Settings.json")
++        // We redirect vgcc.applicationPath to the XDG config dir on Linux.
++
++#if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
++        string xdgConfigHome = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
++        if (string.IsNullOrEmpty(xdgConfigHome))
++            xdgConfigHome = Path.Combine(
++                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
++                ".config");
++
++        string configDir = Path.Combine(xdgConfigHome, "vgc-ally");
++        Directory.CreateDirectory(configDir);
++
++        // Redirect applicationPath — SaveSystem will write Settings.json here
++        vgcc.applicationPath = configDir;
++
++        Debug.Log($"[VGC-Ally] Settings redirected to XDG path: {configDir}");
++
++        // Migrate old Settings.json from app directory if it exists
++        TryMigrateOldSettings(configDir);
++#endif
++    }
++
++    private void TryMigrateOldSettings(string newDir)
++    {
++        // Check common locations for an old settings file
++        string[] oldPaths = {
++            Path.Combine(
++                Path.GetDirectoryName(Application.dataPath) ?? "",
++                "Settings.json"),
++            Path.Combine(
++                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
++                ".steam/root/steamapps/common/VideoGameCapture/Settings.json"),
++        };
++
++        string newPath = Path.Combine(newDir, "Settings.json");
++        if (File.Exists(newPath)) return;  // already migrated
++
++        foreach (var old in oldPaths)
++        {
++            if (!File.Exists(old)) continue;
++            try
++            {
++                File.Copy(old, newPath);
++                Debug.Log($"[VGC-Ally] Migrated settings from {old}");
++                return;
++            }
++            catch (Exception ex)
++            {
++                Debug.LogWarning($"[VGC-Ally] Migration failed from {old}: {ex.Message}");
++            }
++        }
++    }
++}
+diff --git a/build/flatpak/com.vettv.VGCAlly.json b/build/flatpak/com.vettv.VGCAlly.json
+new file mode 100644
+index 0000000..2f868a2
+--- /dev/null
++++ b/build/flatpak/com.vettv.VGCAlly.json
+@@ -0,0 +1,52 @@
++{
++  "app-id": "com.vettv.VGCAlly",
++  "runtime": "org.freedesktop.Platform",
++  "runtime-version": "23.08",
++  "sdk": "org.freedesktop.Sdk",
++  "command": "vgc-ally",
++  "finish-args": [
++    "--share=ipc",
++    "--socket=x11",
++    "--socket=wayland",
++    "--socket=pulseaudio",
++    "--share=network",
++    "--device=all",
++    "--filesystem=xdg-config/vgc-ally:create",
++    "--filesystem=/dev/video0:ro",
++    "--filesystem=/dev/video1:ro",
++    "--filesystem=/dev/video2:ro",
++    "--filesystem=/dev/video3:ro",
++    "--talk-name=org.freedesktop.Flatpak"
++  ],
++  "modules": [
++    {
++      "name": "v4l-utils",
++      "buildsystem": "autotools",
++      "sources": [
++        {
++          "type": "archive",
++          "url": "https://linuxtv.org/downloads/v4l-utils/v4l-utils-1.26.1.tar.xz",
++          "sha256": "verify-before-use"
++        }
++      ]
++    },
++    {
++      "name": "vgc-ally",
++      "buildsystem": "simple",
++      "build-commands": [
++        "install -Dm755 vgc-ally /app/bin/vgc-ally",
++        "install -Dm755 vgc-ally.sh /app/bin/vgc-ally.sh",
++        "install -Dm644 libvgc_v4l2.so /app/lib/vgc-ally/libvgc_v4l2.so",
++        "install -Dm644 com.vettv.VGCAlly.desktop /app/share/applications/com.vettv.VGCAlly.desktop",
++        "install -Dm644 icon_256.png /app/share/icons/hicolor/256x256/apps/com.vettv.VGCAlly.png",
++        "install -Dm644 com.vettv.VGCAlly.metainfo.xml /app/share/metainfo/com.vettv.VGCAlly.metainfo.xml"
++      ],
++      "sources": [
++        {
++          "type": "dir",
++          "path": "."
++        }
++      ]
++    }
++  ]
++}
+diff --git a/build/linux/launch_vgc_ally.sh b/build/linux/launch_vgc_ally.sh
+new file mode 100755
+index 0000000..62b6720
+--- /dev/null
++++ b/build/linux/launch_vgc_ally.sh
+@@ -0,0 +1,66 @@
++#!/usr/bin/env bash
++# launch_vgc_ally.sh — VGC-Ally Steam launch wrapper
++#
++# Handles:
++#   - gamemoderun (AMD perf profile unlock on ROG Ally)
++#   - V4L2 device permission check (user must be in 'video' group)
++#   - PipeWire sanity check
++#   - First-run XDG config directory creation
++#   - Correct LD_LIBRARY_PATH for libvgc_v4l2.so
++#
++# Place this alongside the VGCAlly binary.
++# Add to Steam as a Non-Steam game: "launch_vgc_ally.sh"
++
++set -euo pipefail
++
++SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
++BINARY="${SCRIPT_DIR}/VGCAlly.x86_64"
++NATIVE_LIB_DIR="${SCRIPT_DIR}/VGCAlly_Data/Plugins/Linux/x86_64"
++CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/vgc-ally"
++
++# ── Preflight checks ──────────────────────────────────────────────────────────
++
++# 1. Check binary exists
++if [[ ! -x "${BINARY}" ]]; then
++    echo "[VGC-Ally] ERROR: Binary not found at ${BINARY}"
++    exit 1
++fi
++
++# 2. V4L2 device check — warn if no capture cards detected
++if ! ls /dev/video* &>/dev/null; then
++    echo "[VGC-Ally] WARNING: No V4L2 video devices found in /dev/video*."
++    echo "           Plug in your USB capture card before starting."
++    # Don't abort — user may plug it in after launch
++fi
++
++# 3. Video group check
++if ! id -Gn | grep -qw "video"; then
++    echo "[VGC-Ally] WARNING: Current user is not in the 'video' group."
++    echo "           Capture cards may not be accessible."
++    echo "           Fix: sudo usermod -aG video \$USER  (then log out/in)"
++fi
++
++# 4. PipeWire check (SteamOS ships PipeWire; ALSA fallback if missing)
++if ! pactl info &>/dev/null; then
++    echo "[VGC-Ally] WARNING: PipeWire/PulseAudio not responding. Audio may not work."
++fi
++
++# 5. Create XDG config dir if it doesn't exist
++mkdir -p "${CONFIG_DIR}"
++
++# ── Library path ──────────────────────────────────────────────────────────────
++
++export LD_LIBRARY_PATH="${NATIVE_LIB_DIR}:${LD_LIBRARY_PATH:-}"
++
++# ── GameMode ──────────────────────────────────────────────────────────────────
++# GameMode requests performance CPU governor + disables power throttling.
++# Critical on the ROG Ally Z1 Extreme for consistent low-latency capture.
++
++if command -v gamemoderun &>/dev/null; then
++    echo "[VGC-Ally] Launching with GameMode (performance profile)..."
++    exec gamemoderun "${BINARY}" "$@"
++else
++    echo "[VGC-Ally] gamemoderun not found — launching without GameMode."
++    echo "           Install: sudo pacman -S gamemode  (or via Discover)"
++    exec "${BINARY}" "$@"
++fi
+diff --git a/docs/BUILDING.md b/docs/BUILDING.md
+new file mode 100644
+index 0000000..f144c0a
+--- /dev/null
++++ b/docs/BUILDING.md
+@@ -0,0 +1,146 @@
++# Building VGC-Ally from Source
++
++## Prerequisites
++
++| Tool | Version | Notes |
++|---|---|---|
++| Unity | 2022.3.50f1 LTS | Match upstream project version |
++| Unity IL2CPP Linux module | Same | Install via Unity Hub |
++| CMake | ≥ 3.16 | For native V4L2 plugin |
++| GCC | ≥ 11 | Linux build machine |
++| `v4l-utils` | Any | For testing |
++
++---
++
++## Step 1 — Fork Setup
++
++```bash
++# Fork Vet-TV/VideoGameCapture-Ally on GitHub, then:
++git clone https://github.com/Vet-TV/VideoGameCapture-Ally.git
++cd VideoGameCapture-Ally
++
++# Set upstream remote to pull VGC updates
++git remote add upstream https://github.com/ImmerNochNoah/VideoGameCapture.git
++git fetch upstream
++
++# Overlay branch workflow:
++# - main         = upstream VGC + ally-overlay merged
++# - ally-dev     = active development
++# - ally-overlay = our additions only (rebase-friendly)
++```
++
++---
++
++## Step 2 — Build Native V4L2 Plugin
++
++This creates `libvgc_v4l2.so` which Unity P/Invokes for capture card access.
++
++```bash
++cd native/v4l2
++cmake -B build -DCMAKE_BUILD_TYPE=Release
++cmake --build build
++
++# Output auto-copied to Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
++```
++
++**Verify the .so:**
++```bash
++ldd native/v4l2/build/libvgc_v4l2.so
++# Should show: libc.so only (no external deps)
++
++nm -D native/v4l2/build/libvgc_v4l2.so | grep vgc_
++# Should show: vgc_enumerate_devices, vgc_open_device, etc.
++```
++
++---
++
++## Step 3 — Unity Project Setup
++
++1. Open Unity Hub → Add project → select repo root
++2. Unity version: **2022.3.50f1 LTS** (install if missing)
++3. Build Settings → Switch Platform → **Linux x86_64**
++4. Player Settings:
++   - Scripting Backend: **IL2CPP**
++   - Graphics APIs: **Vulkan** (first), **OpenGLCore** (fallback)
++   - Allow unsafe code: **✅** (required for native plugin P/Invoke)
++5. Apply overlay scripts:
++   - Copy `ally-overlay/Scripts/` → `Assets/Scripts/`
++   - These add V4L2, gamepad nav, and XDG settings on top of upstream
++
++---
++
++## Step 4 — Merge Upstream Changes
++
++When upstream VGC releases a new version:
++
++```bash
++git fetch upstream
++git checkout ally-dev
++git merge upstream/main
++
++# Resolve conflicts — our overlay scripts are in separate namespaces
++# so conflicts should be minimal. The main merge points are:
++#   Assets/Scripts/CaptureManager.cs   ← we added platform abstraction
++#   Assets/Scripts/AudioManager.cs     ← we added Linux audio path
++#   Assets/Scripts/Settings/Settings.cs ← we redirected to XDGSettingsManager
++
++# After merge, test the native plugin still loads:
++# Unity Console should show: "[VGC-Ally] Found N V4L2 capture device(s)."
++```
++
++---
++
++## Step 5 — Build Linux Release
++
++**Via Unity Editor:**
++1. File → Build Settings → Build
++2. Output to `build/linux/output/`
++3. Copy `build/linux/launch_vgc_ally.sh` alongside the binary
++4. `chmod +x launch_vgc_ally.sh`
++
++**Via GitHub Actions (automated):**
++- Push a tag: `git tag v0.1.0-ally && git push --tags`
++- CI builds, packages, and creates a GitHub Release automatically
++
++---
++
++## Testing on ROG Ally / SteamOS
++
++```bash
++# 1. Verify V4L2 capture card is visible
++v4l2-ctl --list-devices
++
++# 2. Check formats your card supports
++v4l2-ctl --device /dev/video0 --list-formats-ext
++
++# 3. Quick capture preview sanity check (no Unity needed)
++mpv --no-config av://v4l2:/dev/video0 --profile=low-latency
++
++# 4. Run VGC-Ally
++./launch_vgc_ally.sh
++
++# 5. Check logs at:
++~/.config/vgc-ally/Player.log
++```
++
++---
++
++## Troubleshooting
++
++**"No V4L2 video devices found"**
++- Ensure USB capture card is plugged in
++- `sudo usermod -aG video $USER` then log out/in
++- Check `dmesg | grep -i video` for kernel messages
++
++**"libvgc_v4l2.so: cannot open shared object file"**
++- Confirm `Assets/Plugins/Linux/x86_64/libvgc_v4l2.so` exists in Unity build output
++- Run `./launch_vgc_ally.sh` (sets `LD_LIBRARY_PATH` correctly)
++
++**Audio not working on SteamOS**
++- SteamOS uses PipeWire. Confirm with: `pactl info | grep Server`
++- FMOD Linux backend should auto-detect PipeWire via PulseAudio compatibility layer
++- Check `~/.config/vgc-ally/settings.json` → `audioVolume` should be `0.0–1.0`
++
++**Gray/washed-out video**
++- Use **Color Range → Expand** in settings (v0.0.14 feature, preserved from upstream)
++- Common with retro consoles outputting limited-range (16–235) signal
+diff --git a/native/v4l2/CMakeLists.txt b/native/v4l2/CMakeLists.txt
+new file mode 100644
+index 0000000..185f967
+--- /dev/null
++++ b/native/v4l2/CMakeLists.txt
+@@ -0,0 +1,32 @@
++cmake_minimum_required(VERSION 3.16)
++project(vgc_v4l2 C)
++
++set(CMAKE_C_STANDARD 11)
++set(CMAKE_POSITION_INDEPENDENT_CODE ON)
++
++# Build as shared library for Unity P/Invoke
++add_library(vgc_v4l2 SHARED vgc_v4l2.c)
++
++# Strip debug symbols in Release for smaller plugin size
++target_compile_options(vgc_v4l2 PRIVATE
++    $<$<CONFIG:Release>:-O2 -fvisibility=hidden>
++    $<$<CONFIG:Debug>:-g -O0>
++)
++
++# Unity expects the plugin at:
++# Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
++set(UNITY_PLUGIN_OUTPUT_DIR
++    "${CMAKE_SOURCE_DIR}/../../../Assets/Plugins/Linux/x86_64"
++    CACHE PATH "Unity plugin output directory")
++
++install(TARGETS vgc_v4l2
++    LIBRARY DESTINATION "${UNITY_PLUGIN_OUTPUT_DIR}")
++
++# Convenience: 'make install' copies directly into Unity project
++add_custom_command(TARGET vgc_v4l2 POST_BUILD
++    COMMAND ${CMAKE_COMMAND} -E make_directory "${UNITY_PLUGIN_OUTPUT_DIR}"
++    COMMAND ${CMAKE_COMMAND} -E copy
++        $<TARGET_FILE:vgc_v4l2>
++        "${UNITY_PLUGIN_OUTPUT_DIR}/libvgc_v4l2.so"
++    COMMENT "Copying libvgc_v4l2.so to Unity plugin directory"
++)
+diff --git a/native/v4l2/vgc_v4l2.c b/native/v4l2/vgc_v4l2.c
+new file mode 100644
+index 0000000..8ab595d
+--- /dev/null
++++ b/native/v4l2/vgc_v4l2.c
+@@ -0,0 +1,250 @@
++/*
++ * vgc_v4l2.c — V4L2 capture backend native plugin for VGC-Ally
++ *
++ * Exposes a C API that Unity P/Invokes via LinuxV4L2CaptureProvider.cs
++ * Handles: device enumeration, format negotiation, MMAP buffer capture,
++ *          YUYV->RGBA conversion
++ *
++ * Build: cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build
++ * Output: libvgc_v4l2.so -> Assets/Plugins/Linux/x86_64/
++ *
++ * License: GPLv3 — fork of ImmerNochNoah/VideoGameCapture
++ */
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <sys/ioctl.h>
++#include <sys/mman.h>
++#include <linux/videodev2.h>
++#include <dirent.h>
++#include <limits.h>
++
++/* Mark all public API symbols as exported (required for Unity P/Invoke) */
++#define VGC_EXPORT __attribute__((visibility("default")))
++
++#define VGC_MAX_DEVICES   16
++#define VGC_MAX_BUFFERS    4
++#define VGC_DEVICE_NAME_LEN 256
++
++/* ── Public API types ─────────────────────────────────────────────────────── */
++
++typedef struct {
++    char path[NAME_MAX + 6];
++    char name[VGC_DEVICE_NAME_LEN];
++} VGCDeviceInfo;
++
++typedef struct {
++    void   *start;
++    size_t  length;
++} VGCBuffer;
++
++typedef struct {
++    int          fd;
++    int          width;
++    int          height;
++    int          fps;
++    __u32        pixelformat;
++    VGCBuffer    buffers[VGC_MAX_BUFFERS];
++    int          n_buffers;
++    int          streaming;
++} VGCDevice;
++
++/* ── Internal helpers ─────────────────────────────────────────────────────── */
++
++static int xioctl(int fd, unsigned long req, void *arg)
++{
++    int r;
++    do { r = ioctl(fd, req, arg); } while (r == -1 && errno == EINTR);
++    return r;
++}
++
++/*
++ * YUYV (YUY2) -> RGBA conversion (BT.601)
++ * Two pixels per 4-byte macropixel: Y0 U Y1 V
++ * Output: RGBA8888, 4 bytes per pixel
++ */
++static void yuyv_to_rgba(const unsigned char *yuyv,
++                          unsigned char       *rgba,
++                          int width, int height)
++{
++    int total = width * height / 2;
++    for (int i = 0; i < total; i++) {
++        int y0 = yuyv[0];
++        int u  = yuyv[1] - 128;
++        int y1 = yuyv[2];
++        int v  = yuyv[3] - 128;
++        yuyv += 4;
++
++        int r0 = y0 + (int)(1.402f * v);
++        int g0 = y0 - (int)(0.344f * u) - (int)(0.714f * v);
++        int b0 = y0 + (int)(1.772f * u);
++        int r1 = y1 + (int)(1.402f * v);
++        int g1 = y1 - (int)(0.344f * u) - (int)(0.714f * v);
++        int b1 = y1 + (int)(1.772f * u);
++
++#define CLAMP(x) ((x) < 0 ? 0 : (x) > 255 ? 255 : (x))
++        *rgba++ = CLAMP(r0); *rgba++ = CLAMP(g0); *rgba++ = CLAMP(b0); *rgba++ = 255;
++        *rgba++ = CLAMP(r1); *rgba++ = CLAMP(g1); *rgba++ = CLAMP(b1); *rgba++ = 255;
++#undef CLAMP
++    }
++}
++
++/* ── Public API ───────────────────────────────────────────────────────────── */
++
++VGC_EXPORT
++int vgc_enumerate_devices(VGCDeviceInfo *out, int max)
++{
++    int count = 0;
++    struct dirent *ent;
++    DIR *dir = opendir("/dev");
++    if (!dir) return 0;
++
++    while ((ent = readdir(dir)) != NULL && count < max) {
++        if (strncmp(ent->d_name, "video", 5) != 0) continue;
++
++        char path[NAME_MAX + 6];
++        snprintf(path, sizeof(path), "/dev/%s", ent->d_name);
++
++        int fd = open(path, O_RDWR | O_NONBLOCK);
++        if (fd < 0) continue;
++
++        struct v4l2_capability cap;
++        if (xioctl(fd, VIDIOC_QUERYCAP, &cap) == 0 &&
++            (cap.capabilities & V4L2_CAP_VIDEO_CAPTURE) &&
++            (cap.capabilities & V4L2_CAP_STREAMING)) {
++
++            strncpy(out[count].path, path, sizeof(out[count].path) - 1);
++            strncpy(out[count].name, (char*)cap.card, VGC_DEVICE_NAME_LEN - 1);
++            count++;
++        }
++        close(fd);
++    }
++    closedir(dir);
++    return count;
++}
++
++VGC_EXPORT
++VGCDevice* vgc_open_device(const char *path, int width, int height, int fps)
++{
++    VGCDevice *dev = (VGCDevice*)calloc(1, sizeof(VGCDevice));
++    if (!dev) return NULL;
++
++    dev->fd = open(path, O_RDWR | O_NONBLOCK);
++    if (dev->fd < 0) { free(dev); return NULL; }
++
++    struct v4l2_format fmt = {0};
++    fmt.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++    fmt.fmt.pix.width       = width;
++    fmt.fmt.pix.height      = height;
++    fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
++    fmt.fmt.pix.field       = V4L2_FIELD_NONE;
++
++    if (xioctl(dev->fd, VIDIOC_S_FMT, &fmt) < 0) {
++        close(dev->fd); free(dev); return NULL;
++    }
++
++    dev->width       = fmt.fmt.pix.width;
++    dev->height      = fmt.fmt.pix.height;
++    dev->pixelformat = fmt.fmt.pix.pixelformat;
++
++    struct v4l2_streamparm parm = {0};
++    parm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++    parm.parm.capture.timeperframe.numerator   = 1;
++    parm.parm.capture.timeperframe.denominator = fps;
++    xioctl(dev->fd, VIDIOC_S_PARM, &parm);
++    dev->fps = fps;
++
++    struct v4l2_requestbuffers req = {0};
++    req.count  = VGC_MAX_BUFFERS;
++    req.type   = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++    req.memory = V4L2_MEMORY_MMAP;
++
++    if (xioctl(dev->fd, VIDIOC_REQBUFS, &req) < 0 || req.count < 2) {
++        close(dev->fd); free(dev); return NULL;
++    }
++
++    dev->n_buffers = req.count;
++
++    for (int i = 0; i < dev->n_buffers; i++) {
++        struct v4l2_buffer buf = {0};
++        buf.type   = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++        buf.memory = V4L2_MEMORY_MMAP;
++        buf.index  = i;
++
++        if (xioctl(dev->fd, VIDIOC_QUERYBUF, &buf) < 0) {
++            close(dev->fd); free(dev); return NULL;
++        }
++
++        dev->buffers[i].length = buf.length;
++        dev->buffers[i].start  = mmap(NULL, buf.length,
++                                       PROT_READ | PROT_WRITE,
++                                       MAP_SHARED, dev->fd, buf.m.offset);
++
++        if (dev->buffers[i].start == MAP_FAILED) {
++            close(dev->fd); free(dev); return NULL;
++        }
++    }
++
++    for (int i = 0; i < dev->n_buffers; i++) {
++        struct v4l2_buffer buf = {0};
++        buf.type   = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++        buf.memory = V4L2_MEMORY_MMAP;
++        buf.index  = i;
++        xioctl(dev->fd, VIDIOC_QBUF, &buf);
++    }
++
++    enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++    if (xioctl(dev->fd, VIDIOC_STREAMON, &type) < 0) {
++        close(dev->fd); free(dev); return NULL;
++    }
++
++    dev->streaming = 1;
++    return dev;
++}
++
++VGC_EXPORT
++int vgc_grab_frame(VGCDevice *dev, unsigned char *rgba_out)
++{
++    if (!dev || !dev->streaming) return -1;
++
++    struct v4l2_buffer buf = {0};
++    buf.type   = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++    buf.memory = V4L2_MEMORY_MMAP;
++
++    if (xioctl(dev->fd, VIDIOC_DQBUF, &buf) < 0) {
++        if (errno == EAGAIN) return 0;
++        return -1;
++    }
++
++    yuyv_to_rgba((unsigned char*)dev->buffers[buf.index].start,
++                 rgba_out, dev->width, dev->height);
++
++    xioctl(dev->fd, VIDIOC_QBUF, &buf);
++    return 1;
++}
++
++VGC_EXPORT int vgc_get_width(VGCDevice *dev)  { return dev ? dev->width  : 0; }
++VGC_EXPORT int vgc_get_height(VGCDevice *dev) { return dev ? dev->height : 0; }
++
++VGC_EXPORT
++void vgc_close_device(VGCDevice *dev)
++{
++    if (!dev) return;
++
++    if (dev->streaming) {
++        enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++        xioctl(dev->fd, VIDIOC_STREAMOFF, &type);
++    }
++
++    for (int i = 0; i < dev->n_buffers; i++) {
++        if (dev->buffers[i].start && dev->buffers[i].start != MAP_FAILED)
++            munmap(dev->buffers[i].start, dev->buffers[i].length);
++    }
++
++    if (dev->fd >= 0) close(dev->fd);
++    free(dev);
++}
+-- 
+2.43.0
+
