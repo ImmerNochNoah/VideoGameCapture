@@ -56,11 +56,6 @@ jobs:
         with:
           lfs: true
 
-      - name: Configure git user
-        run: |
-          git config --local user.email "bot@vgc-ally.local"
-          git config --local user.name "VGC-Ally CI Bot"
-
       - name: Download native plugin
         uses: actions/download-artifact@v4
         with:
@@ -72,14 +67,10 @@ jobs:
           ls -lh Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
           file Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
 
-      - name: Stage downloaded artifacts to prevent dirty tree
+      - name: Configure git user (for Unity)
         run: |
-          # Add the downloaded .so file so it's not seen as an uncommitted change
-          git add -f Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
-          # Stage any other changes from checkout
-          git add -A
-          echo "=== Git status after staging ==="
-          git status
+          git config --local user.email "bot@vgc-ally.local"
+          git config --local user.name "VGC-Ally CI Bot"
 
       - name: Cache Unity Library
         uses: actions/cache@v4
@@ -99,10 +90,8 @@ jobs:
         with:
           unityVersion:        ${{ env.UNITY_VERSION }}
           targetPlatform:      StandaloneLinux64
-          buildName:           ${{ env.BUILD_NAME }}
-          buildPath:           ${{ env.BUILD_PATH }}
-          scriptingBackend:    IL2CPP
-          il2cppArgs:          --gc=bdwgc
+          buildMethod:         BuildScript.BuildLinux
+          allowDirtyBuild:     true
 
       - name: List build output
         if: always()
