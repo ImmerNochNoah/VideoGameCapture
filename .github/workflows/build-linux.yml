@@ -1,0 +1,182 @@
+name: Build VGC-Ally Linux
+
+on:
+  push:
+    branches: [main, ally-dev]
+    tags:     ['v*']
+  pull_request:
+    branches: [main]
+
+env:
+  UNITY_VERSION: 2022.3.50f1   # Match upstream Unity version
+  BUILD_NAME:    VGCAlly
+  BUILD_PATH:    build/linux/output
+
+jobs:
+  # ── Step 1: Build native V4L2 plugin ────────────────────────────────────────
+  build-native-plugin:
+    name: Build libvgc_v4l2.so
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake gcc
+
+      - name: Configure & Build
+        working-directory: native/v4l2
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target vgc_v4l2
+
+      - name: Verify .so built
+        run: |
+          ls -lh native/v4l2/build/libvgc_v4l2.so
+          file native/v4l2/build/libvgc_v4l2.so
+
+      - name: Upload .so artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libvgc_v4l2
+          path: native/v4l2/build/libvgc_v4l2.so
+          retention-days: 1
+
+  # ── Step 2: Unity Linux IL2CPP build ────────────────────────────────────────
+  build-unity:
+    name: Unity Linux Build
+    runs-on: ubuntu-22.04
+    needs: build-native-plugin
+    if: always()  # Continue even if native build had warnings
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Configure git user (for commits)
+        run: |
+          git config --local user.email "bot@vgc-ally.local"
+          git config --local user.name "VGC-Ally CI Bot"
+
+      - name: Download native plugin
+        uses: actions/download-artifact@v4
+        with:
+          name: libvgc_v4l2
+          path: Assets/Plugins/Linux/x86_64/
+
+      - name: Verify native plugin downloaded
+        run: |
+          ls -lh Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
+          file Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
+
+      - name: Commit downloaded artifacts to clean git tree
+        run: |
+          echo "=== Git status before commit ==="
+          git status
+          echo ""
+          echo "=== Committing artifacts ==="
+          git add Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
+          git commit -m "chore: Add native plugin for build" || echo "No changes to commit"
+          echo ""
+          echo "=== Git status after commit ==="
+          git status
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Linux-${{ hashFiles('Assets/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-Linux-
+            Library-
+
+      - name: Build Linux IL2CPP
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE:    ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL:      ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD:   ${{ secrets.UNITY_PASSWORD }}
+        with:
+          unityVersion:        ${{ env.UNITY_VERSION }}
+          targetPlatform:      StandaloneLinux64
+          buildName:           ${{ env.BUILD_NAME }}
+          buildsPath:          ${{ env.BUILD_PATH }}
+          buildMethod:         BuildScript.BuildLinux
+          allowDirtyBuild:     true
+
+      - name: List build output
+        if: always()
+        run: |
+          echo "=== Build directory structure ==="
+          find build/linux -type f \( -name "*.so" -o -name "VGCAlly*" \) 2>/dev/null | head -20 || echo "No build files found"
+          echo ""
+          echo "=== Full build/linux tree ==="
+          ls -lhR build/linux/ 2>/dev/null || echo "No build output found"
+
+      - name: Make launch script executable
+        run: |
+          chmod +x build/linux/launch_vgc_ally.sh 2>/dev/null || echo "launch_vgc_ally.sh not found"
+
+      - name: Bundle release tarball
+        run: |
+          mkdir -p build/linux/output-bundle
+          if [ -f build/linux/launch_vgc_ally.sh ]; then
+            cp build/linux/launch_vgc_ally.sh build/linux/output-bundle/
+          fi
+          # Copy build output if it exists
+          if [ -d "${{ env.BUILD_PATH }}" ]; then
+            echo "Copying build output from ${{ env.BUILD_PATH }}"
+            cp -r "${{ env.BUILD_PATH }}"/* build/linux/output-bundle/ 2>/dev/null || echo "Some build files not found"
+          else
+            echo "Build output directory not found at ${{ env.BUILD_PATH }}"
+          fi
+          # Create tarball
+          cd build/linux/output-bundle
+          tar -czf ../VGCAlly-linux-x64.tar.gz .
+          ls -lh ../VGCAlly-linux-x64.tar.gz
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VGCAlly-Linux
+          path: build/linux/VGCAlly-linux-x64.tar.gz
+          retention-days: 7
+
+  # ── Step 3: Release (on tag push) ───────────────────────────────────────────
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-22.04
+    needs: build-unity
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build
+        uses: actions/download-artifact@v4
+        with:
+          name: VGCAlly-Linux
+          path: dist/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/VGCAlly-linux-x64.tar.gz
+          body: |
+            ## VGC-Ally ${{ github.ref_name }}
+
+            **ASUS ROG Ally / SteamOS optimized build**
+
+            Fork of [ImmerNochNoah/VideoGameCapture](https://github.com/ImmerNochNoah/VideoGameCapture) (GPLv3)
+
+            ### Install
+            ```bash
+            tar -xzf VGCAlly-linux-x64.tar.gz
+            ./launch_vgc_ally.sh
+            ```
+            See [ALLY_README.md](https://github.com/Vet-TV/VideoGameCapture-Ally/blob/main/ALLY_README.md) for full setup instructions.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,15 @@
+# CMake build artifacts
+native/v4l2/build/
+
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# OS
+.DS_Store
+Thumbs.db
