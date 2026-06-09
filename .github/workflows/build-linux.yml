@@ -75,6 +75,11 @@ jobs:
           echo "Library/" >> .git/info/exclude
           echo "build/linux/output/" >> .git/info/exclude
           echo "*.log" >> .git/info/exclude
+          echo "Temp/" >> .git/info/exclude
+          echo ".gradle/" >> .git/info/exclude
+          # Verify excludes are set
+          echo "=== Git exclude rules ==="
+          cat .git/info/exclude
 
       - name: Cache Unity Library
         uses: actions/cache@v4
@@ -92,33 +97,38 @@ jobs:
           UNITY_EMAIL:      ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD:   ${{ secrets.UNITY_PASSWORD }}
         with:
-          unity-version:        ${{ env.UNITY_VERSION }}
-          target-platform:      StandaloneLinux64
-          build-name:           ${{ env.BUILD_NAME }}
-          build-path:           ${{ env.BUILD_PATH }}
-          scripting-backend:    IL2CPP
-          il2cpp-args: --gc=bdwgc
+          unityVersion:        ${{ env.UNITY_VERSION }}
+          targetPlatform:      StandaloneLinux64
+          buildName:           ${{ env.BUILD_NAME }}
+          buildPath:           ${{ env.BUILD_PATH }}
+          scriptingBackend:    IL2CPP
+          il2cppArgs:          --gc=bdwgc
 
       - name: List build output
         if: always()
         run: |
           echo "=== Build directory structure ==="
-          find build/linux -type f -name "*.so" -o -name "VGCAlly*" | head -20
+          find build/linux -type f \( -name "*.so" -o -name "VGCAlly*" \) | head -20
           echo ""
           echo "=== Full build/linux tree ==="
           ls -lhR build/linux/ 2>/dev/null || echo "No build output found"
 
       - name: Make launch script executable
-        run: chmod +x build/linux/launch_vgc_ally.sh
+        run: |
+          chmod +x build/linux/launch_vgc_ally.sh || echo "launch_vgc_ally.sh not found"
 
       - name: Bundle release tarball
         run: |
           mkdir -p build/linux/output-bundle
-          cp build/linux/launch_vgc_ally.sh build/linux/output-bundle/
+          cp build/linux/launch_vgc_ally.sh build/linux/output-bundle/ 2>/dev/null || echo "launch script not found"
           # Copy build output if it exists
           if [ -d "${{ env.BUILD_PATH }}" ]; then
-            cp -r ${{ env.BUILD_PATH }}/* build/linux/output-bundle/ 2>/dev/null || true
+            echo "Copying build output from ${{ env.BUILD_PATH }}"
+            cp -r ${{ env.BUILD_PATH }}/* build/linux/output-bundle/ 2>/dev/null || echo "No build output files to copy"
+          else
+            echo "Build output directory not found at ${{ env.BUILD_PATH }}"
           fi
+          # Create tarball
           cd build/linux/output-bundle
           tar -czf ../VGCAlly-linux-x64.tar.gz .
           ls -lh ../VGCAlly-linux-x64.tar.gz
