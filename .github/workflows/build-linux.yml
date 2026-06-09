@@ -56,6 +56,11 @@ jobs:
         with:
           lfs: true
 
+      - name: Configure git user
+        run: |
+          git config --local user.email "bot@vgc-ally.local"
+          git config --local user.name "VGC-Ally CI Bot"
+
       - name: Download native plugin
         uses: actions/download-artifact@v4
         with:
@@ -67,19 +72,14 @@ jobs:
           ls -lh Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
           file Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
 
-      - name: Configure git to ignore Unity build artifacts
+      - name: Stage downloaded artifacts to prevent dirty tree
         run: |
-          git config --local user.email "bot@vgc-ally.local"
-          git config --local user.name "VGC-Ally CI Bot"
-          # Tell git to ignore uncommitted changes in Unity directories
-          echo "Library/" >> .git/info/exclude
-          echo "build/linux/output/" >> .git/info/exclude
-          echo "*.log" >> .git/info/exclude
-          echo "Temp/" >> .git/info/exclude
-          echo ".gradle/" >> .git/info/exclude
-          # Verify excludes are set
-          echo "=== Git exclude rules ==="
-          cat .git/info/exclude
+          # Add the downloaded .so file so it's not seen as an uncommitted change
+          git add -f Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
+          # Stage any other changes from checkout
+          git add -A
+          echo "=== Git status after staging ==="
+          git status
 
       - name: Cache Unity Library
         uses: actions/cache@v4
@@ -108,23 +108,25 @@ jobs:
         if: always()
         run: |
           echo "=== Build directory structure ==="
-          find build/linux -type f \( -name "*.so" -o -name "VGCAlly*" \) | head -20
+          find build/linux -type f \( -name "*.so" -o -name "VGCAlly*" \) 2>/dev/null | head -20 || echo "No build files found"
           echo ""
           echo "=== Full build/linux tree ==="
           ls -lhR build/linux/ 2>/dev/null || echo "No build output found"
 
       - name: Make launch script executable
         run: |
-          chmod +x build/linux/launch_vgc_ally.sh || echo "launch_vgc_ally.sh not found"
+          chmod +x build/linux/launch_vgc_ally.sh 2>/dev/null || echo "launch_vgc_ally.sh not found"
 
       - name: Bundle release tarball
         run: |
           mkdir -p build/linux/output-bundle
-          cp build/linux/launch_vgc_ally.sh build/linux/output-bundle/ 2>/dev/null || echo "launch script not found"
+          if [ -f build/linux/launch_vgc_ally.sh ]; then
+            cp build/linux/launch_vgc_ally.sh build/linux/output-bundle/
+          fi
           # Copy build output if it exists
           if [ -d "${{ env.BUILD_PATH }}" ]; then
             echo "Copying build output from ${{ env.BUILD_PATH }}"
-            cp -r ${{ env.BUILD_PATH }}/* build/linux/output-bundle/ 2>/dev/null || echo "No build output files to copy"
+            cp -r "${{ env.BUILD_PATH }}"/* build/linux/output-bundle/ 2>/dev/null || echo "Some build files not found"
           else
             echo "Build output directory not found at ${{ env.BUILD_PATH }}"
           fi
