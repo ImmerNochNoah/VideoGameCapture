@@ -1,0 +1,52 @@
+{
+  "app-id": "com.vettv.VGCAlly",
+  "runtime": "org.freedesktop.Platform",
+  "runtime-version": "23.08",
+  "sdk": "org.freedesktop.Sdk",
+  "command": "vgc-ally",
+  "finish-args": [
+    "--share=ipc",
+    "--socket=x11",
+    "--socket=wayland",
+    "--socket=pulseaudio",
+    "--share=network",
+    "--device=all",
+    "--filesystem=xdg-config/vgc-ally:create",
+    "--filesystem=/dev/video0:ro",
+    "--filesystem=/dev/video1:ro",
+    "--filesystem=/dev/video2:ro",
+    "--filesystem=/dev/video3:ro",
+    "--talk-name=org.freedesktop.Flatpak"
+  ],
+  "modules": [
+    {
+      "name": "v4l-utils",
+      "buildsystem": "autotools",
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://linuxtv.org/downloads/v4l-utils/v4l-utils-1.26.1.tar.xz",
+          "sha256": "verify-before-use"
+        }
+      ]
+    },
+    {
+      "name": "vgc-ally",
+      "buildsystem": "simple",
+      "build-commands": [
+        "install -Dm755 vgc-ally /app/bin/vgc-ally",
+        "install -Dm755 vgc-ally.sh /app/bin/vgc-ally.sh",
+        "install -Dm644 libvgc_v4l2.so /app/lib/vgc-ally/libvgc_v4l2.so",
+        "install -Dm644 com.vettv.VGCAlly.desktop /app/share/applications/com.vettv.VGCAlly.desktop",
+        "install -Dm644 icon_256.png /app/share/icons/hicolor/256x256/apps/com.vettv.VGCAlly.png",
+        "install -Dm644 com.vettv.VGCAlly.metainfo.xml /app/share/metainfo/com.vettv.VGCAlly.metainfo.xml"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": "."
+        }
+      ]
+    }
+  ]
+}

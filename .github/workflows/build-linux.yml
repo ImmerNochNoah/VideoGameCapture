@@ -1,0 +1,129 @@
+name: Build VGC-Ally Linux
+
+on:
+  push:
+    branches: [main, ally-dev]
+    tags:     ['v*']
+  pull_request:
+    branches: [main]
+
+env:
+  UNITY_VERSION: 2022.3.50f1   # Match upstream Unity version
+  BUILD_NAME:    VGCAlly
+  BUILD_PATH:    build/linux/output
+
+jobs:
+  # ── Step 1: Build native V4L2 plugin ────────────────────────────────────────
+  build-native-plugin:
+    name: Build libvgc_v4l2.so
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake gcc
+
+      - name: Configure & Build
+        working-directory: native/v4l2
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target vgc_v4l2
+
+      - name: Upload .so artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libvgc_v4l2
+          path: native/v4l2/build/libvgc_v4l2.so
+
+  # ── Step 2: Unity Linux IL2CPP build ────────────────────────────────────────
+  build-unity:
+    name: Unity Linux Build
+    runs-on: ubuntu-22.04
+    needs: build-native-plugin
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Download native plugin
+        uses: actions/download-artifact@v4
+        with:
+          name: libvgc_v4l2
+          path: Assets/Plugins/Linux/x86_64/
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Linux-${{ hashFiles('Assets/**', 'ProjectSettings/**') }}
+          restore-keys: Library-Linux-
+
+      - name: Build Linux IL2CPP
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE:    ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL:      ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD:   ${{ secrets.UNITY_PASSWORD }}
+        with:
+          unity-version:        ${{ env.UNITY_VERSION }}
+          target-platform:      StandaloneLinux64
+          build-name:           ${{ env.BUILD_NAME }}
+          build-path:           ${{ env.BUILD_PATH }}
+          scripting-backend:    IL2CPP
+          # Vulkan primary, OpenGL fallback
+          build-method:         BuildScript.BuildLinux
+
+      - name: Make launch script executable
+        run: chmod +x build/linux/launch_vgc_ally.sh
+
+      - name: Bundle release tarball
+        run: |
+          cp build/linux/launch_vgc_ally.sh ${{ env.BUILD_PATH }}/
+          cd ${{ env.BUILD_PATH }}
+          tar -czf ../VGCAlly-linux-x64.tar.gz .
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VGCAlly-Linux
+          path: build/linux/VGCAlly-linux-x64.tar.gz
+
+  # ── Step 3: Release (on tag push) ───────────────────────────────────────────
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-22.04
+    needs: build-unity
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build
+        uses: actions/download-artifact@v4
+        with:
+          name: VGCAlly-Linux
+          path: dist/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/VGCAlly-linux-x64.tar.gz
+          body: |
+            ## VGC-Ally ${{ github.ref_name }}
+
+            **ASUS ROG Ally / SteamOS optimized build**
+
+            Fork of [ImmerNochNoah/VideoGameCapture](https://github.com/ImmerNochNoah/VideoGameCapture) (GPLv3)
+
+            ### Install
+            ```bash
+            tar -xzf VGCAlly-linux-x64.tar.gz
+            ./launch_vgc_ally.sh
+            ```
+            See [ALLY_README.md](https://github.com/Vet-TV/VideoGameCapture-Ally/blob/main/ALLY_README.md) for full setup instructions.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
