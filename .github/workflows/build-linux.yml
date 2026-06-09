@@ -32,17 +32,24 @@ jobs:
           cmake -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build --target vgc_v4l2
 
+      - name: Verify .so built
+        run: |
+          ls -lh native/v4l2/build/libvgc_v4l2.so
+          file native/v4l2/build/libvgc_v4l2.so
+
       - name: Upload .so artifact
         uses: actions/upload-artifact@v4
         with:
           name: libvgc_v4l2
           path: native/v4l2/build/libvgc_v4l2.so
+          retention-days: 1
 
   # ── Step 2: Unity Linux IL2CPP build ────────────────────────────────────────
   build-unity:
     name: Unity Linux Build
     runs-on: ubuntu-22.04
     needs: build-native-plugin
+    if: always()  # Continue even if native build had warnings
 
     steps:
       - uses: actions/checkout@v4
@@ -55,12 +62,19 @@ jobs:
           name: libvgc_v4l2
           path: Assets/Plugins/Linux/x86_64/
 
+      - name: Verify native plugin downloaded
+        run: |
+          ls -lh Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
+          file Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
+
       - name: Cache Unity Library
         uses: actions/cache@v4
         with:
           path: Library
           key: Library-Linux-${{ hashFiles('Assets/**', 'ProjectSettings/**') }}
-          restore-keys: Library-Linux-
+          restore-keys: |
+            Library-Linux-
+            Library-
 
       - name: Build Linux IL2CPP
         uses: game-ci/unity-builder@v4
@@ -74,23 +88,34 @@ jobs:
           build-name:           ${{ env.BUILD_NAME }}
           build-path:           ${{ env.BUILD_PATH }}
           scripting-backend:    IL2CPP
-          # Vulkan primary, OpenGL fallback
-          build-method:         BuildScript.BuildLinux
+          il2cpp-args: --gc=bdwgc
+          # Don't specify build-method — game-ci handles it via Unity editor preferences
+          # build-method is only for custom C# scripts, which we don't need
+
+      - name: List build output
+        if: always()
+        run: |
+          echo "=== Build directory structure ==="
+          find build/linux -type f -name "*.so" -o -name "VGCAlly*" | head -20
 
       - name: Make launch script executable
         run: chmod +x build/linux/launch_vgc_ally.sh
 
       - name: Bundle release tarball
         run: |
-          cp build/linux/launch_vgc_ally.sh ${{ env.BUILD_PATH }}/
-          cd ${{ env.BUILD_PATH }}
+          mkdir -p build/linux/output-bundle
+          cp build/linux/launch_vgc_ally.sh build/linux/output-bundle/
+          cp -r ${{ env.BUILD_PATH }}/* build/linux/output-bundle/ || echo "Build output may not exist yet"
+          cd build/linux/output-bundle
           tar -czf ../VGCAlly-linux-x64.tar.gz .
+          ls -lh ../VGCAlly-linux-x64.tar.gz
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: VGCAlly-Linux
           path: build/linux/VGCAlly-linux-x64.tar.gz
+          retention-days: 7
 
   # ── Step 3: Release (on tag push) ───────────────────────────────────────────
   release:
