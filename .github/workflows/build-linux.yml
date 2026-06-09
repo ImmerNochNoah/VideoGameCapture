@@ -56,6 +56,11 @@ jobs:
         with:
           lfs: true
 
+      - name: Configure git user (for commits)
+        run: |
+          git config --local user.email "bot@vgc-ally.local"
+          git config --local user.name "VGC-Ally CI Bot"
+
       - name: Download native plugin
         uses: actions/download-artifact@v4
         with:
@@ -67,10 +72,17 @@ jobs:
           ls -lh Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
           file Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
 
-      - name: Configure git user (for Unity)
+      - name: Commit downloaded artifacts to clean git tree
         run: |
-          git config --local user.email "bot@vgc-ally.local"
-          git config --local user.name "VGC-Ally CI Bot"
+          echo "=== Git status before commit ==="
+          git status
+          echo ""
+          echo "=== Committing artifacts ==="
+          git add Assets/Plugins/Linux/x86_64/libvgc_v4l2.so
+          git commit -m "chore: Add native plugin for build" || echo "No changes to commit"
+          echo ""
+          echo "=== Git status after commit ==="
+          git status
 
       - name: Cache Unity Library
         uses: actions/cache@v4
@@ -90,6 +102,8 @@ jobs:
         with:
           unityVersion:        ${{ env.UNITY_VERSION }}
           targetPlatform:      StandaloneLinux64
+          buildName:           ${{ env.BUILD_NAME }}
+          buildsPath:          ${{ env.BUILD_PATH }}
           buildMethod:         BuildScript.BuildLinux
           allowDirtyBuild:     true
 
